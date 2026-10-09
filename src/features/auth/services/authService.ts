@@ -9,18 +9,18 @@ export const authService = {
     });
   },
 
-  register: async (userData: any) => {
+  register: async (_userData: any) => {
     // Replace with actual API call
     return new Promise((resolve) => {
       setTimeout(() => resolve({ success: true }), 1000);
     });
   },
 
-  forgotPassword: async (email: string) => {
+  forgotPassword: async (_email: string) => {
     return new Promise((resolve) => setTimeout(() => resolve({ success: true }), 1000));
   },
 
-  verifyOtp: async (email: string, otp: string) => {
+  verifyOtp: async (_email: string, _otp: string) => {
     return new Promise((resolve) => setTimeout(() => resolve({ success: true }), 1000));
   }
 };
