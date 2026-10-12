@@ -53,7 +53,7 @@ export const authApi = {
    * Dùng rawAuthClient để tránh loop interceptor
    */
   refresh: async (): Promise<ApiResponse<LoginResponse>> => {
-    const res = await rawAuthClient.post<ApiResponse<LoginResponse>>('/api/auth/refresh');
+    const res = await rawAuthClient.post<ApiResponse<LoginResponse>>('/api/auth/refresh', {});
     return res.data;
   },
 

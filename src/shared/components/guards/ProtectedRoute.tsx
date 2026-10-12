@@ -23,15 +23,15 @@ export default function ProtectedRoute({
   children,
   redirectTo = '/login',
 }: ProtectedRouteProps) {
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isInitializing, isLoading } = useAuth();
   const location = useLocation();
 
-  // 1. Nếu đang trong quá trình Silent Refresh khởi động App -> hiển thị Splash Loader
-  if (isLoading) {
+  // 1. Khi đang trong quá trình Silent Refresh khởi động App (F5), hiển thị Splash Loader (TUYỆT ĐỐI KHÔNG REDIRECT)
+  if (isInitializing || isLoading) {
     return <SplashLoader message="Đang kiểm tra quyền truy cập..." />;
   }
 
-  // 2. Nếu chưa đăng nhập -> chuyển hướng về Login và lưu URL trước đó để redirect lại
+  // 2. Chỉ chuyển hướng về Login khi đã kiểm tra xong (isInitializing = false) mà không đăng nhập
   if (!isAuthenticated || !user) {
     return <Navigate to={redirectTo} state={{ from: location }} replace />;
   }
@@ -44,7 +44,7 @@ export default function ProtectedRoute({
     const hasPermission = requiredRoles.some((role) => userRoles.includes(role));
 
     if (!hasPermission) {
-      // Không đủ quyền -> chuyển hướng về trang 403 hoặc trang chủ
+      // Không đủ quyền -> chuyển hướng về trang 403 Forbidden
       return <Navigate to="/403" replace />;
     }
   }

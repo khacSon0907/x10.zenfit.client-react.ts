@@ -140,7 +140,8 @@ axiosClient.interceptors.response.use(
 
       try {
         const refreshResponse = await rawAuthClient.post<ApiResponse<LoginResponse>>(
-          '/api/auth/refresh'
+          '/api/auth/refresh',
+          {}
         );
 
         const newLoginData = refreshResponse.data.data;

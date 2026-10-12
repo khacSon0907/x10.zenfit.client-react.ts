@@ -20,7 +20,7 @@ function AppContent() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 dark:text-gray-100 font-poppins flex flex-col">
       {!isAuthPage && <Header />}
-      <main className={`flex-grow ${!isAuthPage ? 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full' : ''}`}>
+      <main className={`flex-grow ${!isAuthPage ? 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 lg:py-12 w-full' : ''}`}>
         <AppRoutes />
       </main>
       {!isAuthPage && <Footer />}

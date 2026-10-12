@@ -12,14 +12,15 @@ export default function PublicOnlyRoute({
   children,
   redirectTo = '/',
 }: PublicOnlyRouteProps) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isInitializing, isLoading } = useAuth();
   const location = useLocation();
 
-  if (isLoading) {
+  // 1. Khi đang trong quá trình Silent Refresh khởi động App (F5), hiển thị màn hình chờ (TUYỆT ĐỐI KHÔNG REDIRECT)
+  if (isInitializing || isLoading) {
     return <SplashLoader message="Đang tải..." />;
   }
 
-  // Nếu người dùng đã đăng nhập, điều hướng về trang trước đó hoặc trang chủ
+  // 2. Nếu người dùng đã đăng nhập, điều hướng về trang trước đó hoặc trang chủ
   if (isAuthenticated) {
     const fromPath = (location.state as { from?: { pathname?: string } })?.from?.pathname || redirectTo;
     return <Navigate to={fromPath} replace />;

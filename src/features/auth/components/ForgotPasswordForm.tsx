@@ -139,7 +139,7 @@ export default function ForgotPasswordForm() {
                 value={otp}
                 onChange={(e) => setOtp(e.target.value.trim())}
                 maxLength={6}
-                className="block w-full pl-11 pr-4 py-3 text-center tracking-[0.5em] text-xl font-bold font-mono border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:bg-white dark:focus:bg-gray-800 outline-none placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                className="block w-full pl-11 pr-4 py-3 text-center tracking-[0.3em] sm:tracking-[0.5em] text-lg sm:text-xl font-bold font-mono border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:bg-white dark:focus:bg-gray-800 outline-none placeholder:text-gray-400 dark:placeholder:text-gray-500"
                 placeholder="000000"
                 required
               />

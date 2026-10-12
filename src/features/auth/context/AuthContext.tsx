@@ -28,8 +28,12 @@ export interface AuthContextType {
   user: UserProfile | null;
   accessToken: string | null;
   isAuthenticated: boolean;
-  isLoading: boolean;
-  login: (credentials: LoginReq) => Promise<UserProfile>;
+  isInitializing: boolean; // Cờ quan trọng chặn ProtectedRoute redirect sớm khi F5
+  isLoading: boolean;      // Alias cho isInitializing
+  login: (
+    credentialsOrUser: LoginReq | UserProfile,
+    maybeToken?: string
+  ) => Promise<UserProfile>;
   register: (data: RegisterReq) => Promise<RegisterResponse>;
   logout: () => Promise<void>;
   verifyOtp: (data: VerifyOtpReq) => Promise<void>;
@@ -49,7 +53,7 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [accessTokenState, setAccessTokenState] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isInitializing, setIsInitializing] = useState<boolean>(true);
 
   // Helper gán thông tin đăng nhập thành công vào memory & state
   const handleAuthSuccess = useCallback((accessToken: string, profile: UserProfile) => {
@@ -100,6 +104,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   /**
    * Silent Refresh khi App khởi động hoặc khi người dùng F5
+   * withCredentials: true tự động đính kèm Cookie HttpOnly refreshToken
    */
   useEffect(() => {
     let isMounted = true;
@@ -109,9 +114,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         await refreshSession();
       } catch {
         // Lỗi 401 khi chưa login hoặc cookie hết hạn -> bỏ qua, coi như chưa đăng nhập
+        handleAuthCleanup();
       } finally {
         if (isMounted) {
-          setIsLoading(false);
+          setIsInitializing(false);
         }
       }
     };
@@ -121,13 +127,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => {
       isMounted = false;
     };
-  }, [refreshSession]);
+  }, [refreshSession, handleAuthCleanup]);
 
   /**
-   * Action: Đăng nhập với Email & Password
+   * Action: Đăng nhập (Hỗ trợ cả Email/Password hoặc UserProfile + token)
    */
-  const login = async (credentials: LoginReq): Promise<UserProfile> => {
-    const response = await authApi.login(credentials);
+  const login = async (
+    credentialsOrUser: LoginReq | UserProfile,
+    maybeToken?: string
+  ): Promise<UserProfile> => {
+    if (maybeToken && typeof maybeToken === 'string') {
+      return handleAuthSuccess(maybeToken, credentialsOrUser as UserProfile);
+    }
+    const response = await authApi.login(credentialsOrUser as LoginReq);
     const loginData = response.data;
     return handleAuthSuccess(loginData.accessToken, loginData);
   };
@@ -150,6 +162,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Dù API logout có lỗi mạng, vẫn dọn dẹp state ở Frontend
     } finally {
       handleAuthCleanup();
+      if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
+        window.location.href = '/login';
+      }
     }
   };
 
@@ -204,7 +219,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     user,
     accessToken: accessTokenState,
     isAuthenticated: Boolean(user && accessTokenState),
-    isLoading,
+    isInitializing,
+    isLoading: isInitializing,
     login,
     register,
     logout,
@@ -219,7 +235,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <AuthContext.Provider value={contextValue}>
-      {isLoading ? <SplashLoader /> : children}
+      {isInitializing ? <SplashLoader /> : children}
     </AuthContext.Provider>
   );
 };
