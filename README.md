@@ -1,6 +1,10 @@
-# React + TypeScript + Vite
+# Zenfit Frontend (React + TypeScript + Vite)
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Nền tảng Quản lý Tập luyện & Sức khỏe Zenfit Frontend.
+
+## 📖 Tài liệu Kiến trúc Hệ thống
+- Chi tiết cơ chế & luồng xác thực: [Tài liệu Kiến trúc & Luồng Authentication](docs/AUTH_FLOW_ARCHITECTURE.md)
+
 
 Currently, two official plugins are available:
 

@@ -4,8 +4,8 @@ import OtpForm from '../components/OtpForm';
 export default function VerifyOtpPage() {
   return (
     <AuthLayout 
-      title="Verify your email" 
-      subtitle="We have sent a verification code to your email."
+      title="Xác thực mã OTP" 
+      subtitle="Chúng tôi đã gửi mã xác thực 6 số đến email của bạn."
     >
       <OtpForm />
     </AuthLayout>

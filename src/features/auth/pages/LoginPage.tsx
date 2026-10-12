@@ -4,8 +4,8 @@ import LoginForm from '../components/LoginForm';
 export default function LoginPage() {
   return (
     <AuthLayout 
-      title="Welcome back" 
-      subtitle="Enter your details to access your account."
+      title="Chào mừng trở lại" 
+      subtitle="Nhập thông tin tài khoản của bạn để tiếp tục."
     >
       <LoginForm />
     </AuthLayout>

@@ -1,26 +1,53 @@
-// This is a placeholder for your authentication API calls
+import authApi, { getGoogleOAuth2Url } from '../api/auth.api';
+import type {
+  ChangePasswordReq,
+  ForgotPasswordReq,
+  LoginReq,
+  RegisterReq,
+  ResetPasswordReq,
+  VerifyForgotPasswordOtpReq,
+  VerifyOtpReq,
+} from '../types/auth.types';
+
+/**
+ * Service adapter kết nối trực tiếp với authApi
+ * Duy trì tính tương thích ngược cho các component hiện có
+ */
 export const authService = {
-  login: async (credentials: any) => {
-    // Replace with actual API call
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({ data: { id: '1', name: 'John Doe', email: credentials.email } });
-      }, 1000);
-    });
+  login: async (credentials: LoginReq) => {
+    return authApi.login(credentials);
   },
 
-  register: async (_userData: any) => {
-    // Replace with actual API call
-    return new Promise((resolve) => {
-      setTimeout(() => resolve({ success: true }), 1000);
-    });
+  register: async (userData: RegisterReq) => {
+    return authApi.register(userData);
   },
 
-  forgotPassword: async (_email: string) => {
-    return new Promise((resolve) => setTimeout(() => resolve({ success: true }), 1000));
+  verifyOtp: async (email: string, otp: string) => {
+    const req: VerifyOtpReq = { email, otp };
+    return authApi.verifyOtp(req);
   },
 
-  verifyOtp: async (_email: string, _otp: string) => {
-    return new Promise((resolve) => setTimeout(() => resolve({ success: true }), 1000));
-  }
+  forgotPassword: async (email: string) => {
+    const req: ForgotPasswordReq = { email };
+    return authApi.forgotPassword(req);
+  },
+
+  verifyForgotPasswordOtp: async (email: string, otp: string) => {
+    const req: VerifyForgotPasswordOtpReq = { email, otp };
+    return authApi.verifyForgotPasswordOtp(req);
+  },
+
+  resetPassword: async (data: ResetPasswordReq) => {
+    return authApi.resetPassword(data);
+  },
+
+  changePassword: async (data: ChangePasswordReq) => {
+    return authApi.changePassword(data);
+  },
+
+  getGoogleLoginUrl: () => {
+    return getGoogleOAuth2Url();
+  },
 };
+
+export default authService;

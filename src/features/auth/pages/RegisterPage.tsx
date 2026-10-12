@@ -4,8 +4,8 @@ import RegisterForm from '../components/RegisterForm';
 export default function RegisterPage() {
   return (
     <AuthLayout 
-      title="Create an account" 
-      subtitle="Start your fitness journey with Zenfit today."
+      title="Tạo tài khoản mới" 
+      subtitle="Bắt đầu hành trình sống khỏe cùng Zenfit ngay hôm nay."
     >
       <RegisterForm />
     </AuthLayout>

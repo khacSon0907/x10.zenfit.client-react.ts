@@ -4,8 +4,8 @@ import ForgotPasswordForm from '../components/ForgotPasswordForm';
 export default function ForgotPasswordPage() {
   return (
     <AuthLayout 
-      title="Reset Password" 
-      subtitle="Enter your email to receive a password reset link."
+      title="Khôi phục mật khẩu" 
+      subtitle="Nhập email của bạn để nhận liên kết đặt lại mật khẩu."
     >
       <ForgotPasswordForm />
     </AuthLayout>

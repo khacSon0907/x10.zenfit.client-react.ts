@@ -1,4 +1,5 @@
 import { BrowserRouter, useLocation } from 'react-router-dom';
+import { Toaster } from 'sonner';
 import Header from './components/layout/Header/Header';
 import Footer from './components/layout/Footer/Footer';
 import AppRoutes from './routes/AppRoutes';
@@ -7,7 +8,13 @@ import { AuthProvider } from './features/auth/context/AuthContext';
 
 function AppContent() {
   const location = useLocation();
-  const authRoutes = ['/login', '/register', '/forgot-password', '/verify-otp'];
+  const authRoutes = [
+    '/login',
+    '/register',
+    '/forgot-password',
+    '/verify-otp',
+    '/oauth2/success',
+  ];
   const isAuthPage = authRoutes.includes(location.pathname);
 
   return (
@@ -26,9 +33,10 @@ export default function App() {
     <SettingsProvider>
       <AuthProvider>
         <BrowserRouter>
+          <Toaster richColors position="top-right" closeButton />
           <AppContent />
         </BrowserRouter>
       </AuthProvider>
     </SettingsProvider>
-  )
+  );
 }

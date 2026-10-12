@@ -1,20 +1,17 @@
 import logo from '../../../assets/logo/logo-zenfit.png';
-import { useSettings } from '../../../context/SettingsContext';
 
 function Footer() {
-  const { t } = useSettings();
-
   const explore = [
-    { id: 'home', label: t('home') },
-    { id: 'workouts', label: t('workouts') },
-    { id: 'nutrition', label: t('nutrition') },
-    { id: 'community', label: t('community') },
+    { id: 'home', label: 'Trang chủ', href: '/' },
+    { id: 'workouts', label: 'Bài tập', href: '#workouts' },
+    { id: 'nutrition', label: 'Dinh dưỡng', href: '#nutrition' },
+    { id: 'community', label: 'Cộng đồng', href: '#community' },
   ];
   const support = [
-    { href: '#help', label: t('helpCenter') },
-    { href: '#privacy', label: t('privacy') },
-    { href: '#terms', label: t('terms') },
-    { href: '#contact', label: t('contact') },
+    { href: '#help', label: 'Trung tâm trợ giúp' },
+    { href: '#privacy', label: 'Chính sách bảo mật' },
+    { href: '#terms', label: 'Điều khoản dịch vụ' },
+    { href: '#contact', label: 'Liên hệ' },
   ];
   const socials = [
     { name: 'Facebook', path: 'M22 12a10 10 0 1 0-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.5h-1.3c-1.2 0-1.6.8-1.6 1.6V12h2.8l-.4 2.9h-2.3v7A10 10 0 0 0 22 12z' },
@@ -26,13 +23,13 @@ function Footer() {
     'text-sm text-gray-500 dark:text-gray-400 hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors duration-300';
 
   return (
-    <footer className="mt-auto bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
+    <footer className="mt-auto bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
           {/* Brand */}
           <div className="md:col-span-2">
             <div className="flex items-center gap-3">
-              <div className="rounded-2xl bg-gradient-to-tr from-green-100 to-emerald-50 p-2 shadow-sm">
+              <div className="rounded-2xl bg-gradient-to-tr from-green-100 to-emerald-50 dark:from-emerald-950 dark:to-gray-800 p-2 shadow-sm">
                 <img src={logo} alt="Zenfit Logo" className="h-8 w-8 object-contain" />
               </div>
               <span className="text-2xl font-poppins font-bold tracking-tight text-gray-800 dark:text-gray-100">
@@ -40,7 +37,7 @@ function Footer() {
               </span>
             </div>
             <p className="mt-4 max-w-sm text-sm leading-relaxed text-gray-500 dark:text-gray-400">
-              {t('footerTagline')}
+              Người bạn đồng hành thể hình lý tưởng của bạn. Tập luyện thông minh hơn, ăn uống khoa học hơn, sống khỏe mạnh hơn.
             </p>
             <div className="mt-5 flex gap-3">
               {socials.map((s) => (
@@ -61,12 +58,12 @@ function Footer() {
           {/* Explore */}
           <div>
             <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-800 dark:text-gray-100">
-              {t('explore')}
+              Khám phá
             </h3>
             <ul className="mt-4 space-y-3">
               {explore.map((i) => (
                 <li key={i.id}>
-                  <a href={`#${i.id}`} className={linkCls}>{i.label}</a>
+                  <a href={i.href} className={linkCls}>{i.label}</a>
                 </li>
               ))}
             </ul>
@@ -75,7 +72,7 @@ function Footer() {
           {/* Support */}
           <div>
             <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-800 dark:text-gray-100">
-              {t('support')}
+              Hỗ trợ
             </h3>
             <ul className="mt-4 space-y-3">
               {support.map((i) => (
@@ -89,9 +86,9 @@ function Footer() {
 
         <div className="mt-10 pt-6 border-t border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row items-center justify-between gap-2">
           <p className="text-xs text-gray-400 dark:text-gray-500">
-            © {new Date().getFullYear()} Zenfit. {t('rights')}
+            © {new Date().getFullYear()} Zenfit. Bảo lưu mọi quyền.
           </p>
-          <p className="text-xs text-gray-400 dark:text-gray-500">Made with 💚 for a healthier you</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500">Được tạo ra với 💚 vì một phiên bản khỏe mạnh hơn của bạn</p>
         </div>
       </div>
     </footer>
