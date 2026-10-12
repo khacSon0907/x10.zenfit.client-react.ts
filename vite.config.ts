@@ -16,7 +16,8 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
-      '/oauth2': {
+      // Chỉ proxy endpoint authorize của Spring Security, tránh nuốt route SPA '/oauth2/success'
+      '/oauth2/authorization': {
         target: 'http://localhost:8080',
         changeOrigin: true,
         secure: false,

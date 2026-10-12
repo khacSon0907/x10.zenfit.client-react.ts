@@ -1,4 +1,4 @@
-import axiosClient, { API_BASE_URL, rawAuthClient } from '../../../shared/api/axiosClient';
+import axiosClient, { API_BASE_URL, getRefreshToken, rawAuthClient } from '../../../shared/api/axiosClient';
 import type {
   ApiResponse,
   ChangePasswordReq,
@@ -6,6 +6,7 @@ import type {
   LoginReq,
   LoginResponse,
   OAuth2ExchangeRequest,
+  RefreshTokenReq,
   RegisterReq,
   RegisterResponse,
   ResetPasswordReq,
@@ -49,11 +50,14 @@ export const authApi = {
   },
 
   /**
-   * Làm mới Access Token (Silent Refresh) sử dụng HttpOnly Cookie refreshToken
-   * Dùng rawAuthClient để tránh loop interceptor
+   * Làm mới Access Token (Silent Refresh) bằng phương thức POST
+   * Gửi body { refreshToken } nếu có, kết hợp HttpOnly Cookie (withCredentials: true)
+   * Sử dụng rawAuthClient để tránh kích hoạt Interceptor lặp vô hạn
    */
-  refresh: async (): Promise<ApiResponse<LoginResponse>> => {
-    const res = await rawAuthClient.post<ApiResponse<LoginResponse>>('/api/auth/refresh', {});
+  refresh: async (refreshToken?: string): Promise<ApiResponse<LoginResponse>> => {
+    const token = refreshToken || getRefreshToken() || undefined;
+    const body: RefreshTokenReq = token ? { refreshToken: token } : {};
+    const res = await rawAuthClient.post<ApiResponse<LoginResponse>>('/api/auth/refresh', body);
     return res.data;
   },
 

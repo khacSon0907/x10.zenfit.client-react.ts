@@ -41,6 +41,11 @@ export interface UserProfile {
 
 export interface LoginResponse extends UserProfile {
   accessToken: string;
+  refreshToken?: string;
+}
+
+export interface RefreshTokenReq {
+  refreshToken?: string;
 }
 
 export interface RegisterResponse {
@@ -105,6 +110,8 @@ export const AUTH_ERROR_CODES = {
   RATE_LIMIT_EXCEEDED: 'AUTH.RATE_LIMIT_EXCEEDED',
   INVALID_OTP: 'AUTH.INVALID_OTP',
   GOOGLE_ACCOUNT_LOGIN_REQUIRED: 'AUTH.GOOGLE_ACCOUNT_LOGIN_REQUIRED',
+  REFRESH_SUCCESS: 'AUTH.REFRESH_SUCCESS',
+  INVALID_REFRESH_TOKEN: 'AUTH.INVALID_REFRESH_TOKEN',
 } as const;
 
 export type AuthErrorCodeType = (typeof AUTH_ERROR_CODES)[keyof typeof AUTH_ERROR_CODES];

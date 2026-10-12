@@ -2,18 +2,21 @@ import {
   createContext,
   useCallback,
   useEffect,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
 import authApi from '../api/auth.api';
 import {
   setAccessToken,
+  setRefreshToken,
   setAuthInterceptorListeners,
 } from '../../../shared/api/axiosClient';
 import type {
   ChangePasswordReq,
   ForgotPasswordReq,
   LoginReq,
+  LoginResponse,
   RegisterReq,
   RegisterResponse,
   ResetPasswordReq,
@@ -56,13 +59,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isInitializing, setIsInitializing] = useState<boolean>(true);
 
   // Helper gán thông tin đăng nhập thành công vào memory & state
-  const handleAuthSuccess = useCallback((accessToken: string, profile: UserProfile) => {
+  const handleAuthSuccess = useCallback((accessToken: string, profile: LoginResponse | UserProfile) => {
     // Đảm bảo có trường name thân thiện cho giao diện người dùng
     const userWithFallbackName: UserProfile = {
       ...profile,
       name: profile.name || profile.username,
     };
     setAccessToken(accessToken);
+    if ('refreshToken' in profile && profile.refreshToken) {
+      setRefreshToken(profile.refreshToken);
+    }
     setAccessTokenState(accessToken);
     setUser(userWithFallbackName);
     return userWithFallbackName;
@@ -71,6 +77,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Helper xóa sạch session khi logout hoặc hết hạn
   const handleAuthCleanup = useCallback(() => {
     setAccessToken(null);
+    setRefreshToken(null);
     setAccessTokenState(null);
     setUser(null);
   }, []);
@@ -102,31 +109,36 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
   }, [handleAuthSuccess, handleAuthCleanup]);
 
+  // Cờ chặn React Strict Mode chạy bootstrapAuth 2 lần ở môi trường Dev
+  const hasBootstrappedRef = useRef(false);
+
   /**
    * Silent Refresh khi App khởi động hoặc khi người dùng F5
    * withCredentials: true tự động đính kèm Cookie HttpOnly refreshToken
    */
   useEffect(() => {
-    let isMounted = true;
+    // Nếu đang ở trang callback của OAuth2 thì bỏ qua silent refresh khởi động,
+    // để OAuth2CallbackPage lập tức mount và tiến hành đổi mã one-time code
+    if (typeof window !== 'undefined' && window.location.pathname.startsWith('/oauth2/success')) {
+      setIsInitializing(false);
+      return;
+    }
+
+    if (hasBootstrappedRef.current) return;
+    hasBootstrappedRef.current = true;
 
     const bootstrapAuth = async () => {
       try {
         await refreshSession();
       } catch {
-        // Lỗi 401 khi chưa login hoặc cookie hết hạn -> bỏ qua, coi như chưa đăng nhập
+        // Lỗi 401 khi chưa login hoặc cookie hết hạn -> dọn dẹp state và cho phép vào app như khách (guest)
         handleAuthCleanup();
       } finally {
-        if (isMounted) {
-          setIsInitializing(false);
-        }
+        setIsInitializing(false);
       }
     };
 
     bootstrapAuth();
-
-    return () => {
-      isMounted = false;
-    };
   }, [refreshSession, handleAuthCleanup]);
 
   /**
