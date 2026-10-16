@@ -1,7 +1,9 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from '../features/auth/pages/LoginPage';
+import RegisterPage from '../features/auth/pages/RegisterPage';
 import ForgotPasswordPage from '../features/auth/pages/ForgotPasswordPage';
 import VerifyOtpPage from '../features/auth/pages/VerifyOtpPage';
+import OAuth2CallbackPage from '../features/auth/pages/OAuth2CallbackPage';
 import ForbiddenPage from '../pages/ForbiddenPage';
 
 import PTLayout from '../components/layout/PTLayout';
@@ -21,6 +23,7 @@ import AdminPTManagementPage from '../pages/admin/AdminPTManagementPage';
 import AdminSubscriptionPlansPage from '../pages/admin/AdminSubscriptionPlansPage';
 import AdminFeePaymentsPage from '../pages/admin/AdminFeePaymentsPage';
 import AdminAuditLogsPage from '../pages/admin/AdminAuditLogsPage';
+import HomePage from '../pages/Home/HomePage';
 
 import { useApp } from '../context/AppContext';
 
@@ -61,12 +64,14 @@ export default function AppRoutes() {
   return (
     <Routes>
       {/* Trang gốc tự động điều hướng sang Đăng nhập hoặc Dashboard tương ứng */}
-      <Route path="/" element={<RootRedirect />} />
-
+      <Route path="/" element={<HomePage/>} />
       {/* Xác thực tài khoản */}
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/verify-otp" element={<VerifyOtpPage />} />
+      <Route path="/oauth2/success" element={<OAuth2CallbackPage />} />
+      <Route path="/oauth2/callback" element={<OAuth2CallbackPage />} />
       <Route path="/403" element={<ForbiddenPage />} />
 
       {/* Phân hệ PT Workspace (Có Sidebar desktop + Mobile bottom nav) */}

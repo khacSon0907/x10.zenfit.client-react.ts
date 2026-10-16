@@ -65,6 +65,8 @@ export interface RegisterReq {
   username: string;
   email: string;
   password: string;
+  phone?: string;
+  phoneNumber?: string;
 }
 
 export interface VerifyOtpReq {

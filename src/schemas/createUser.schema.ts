@@ -23,6 +23,15 @@ export const createUserSchema = z.object({
     .max(30, 'Tên người dùng phải từ 3 đến 30 ký tự')
     .regex(USERNAME_REGEX, 'Tên người dùng chỉ được chứa chữ, số, dấu gạch dưới và dấu chấm'),
 
+  phone: z
+    .string()
+    .trim()
+    .min(1, 'Số điện thoại không được để trống')
+    .refine((val) => {
+      const cleaned = val.replace(/\s+/g, '');
+      return /^(0|\+84)[3|5|7|8|9][0-9]{8}$/.test(cleaned);
+    }, 'Số điện thoại không hợp lệ (VD: 0912345678)'),
+
   email: z
     .string()
     .trim()

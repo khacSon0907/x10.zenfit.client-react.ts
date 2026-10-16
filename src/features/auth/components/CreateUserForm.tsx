@@ -1,15 +1,13 @@
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, User, ArrowRight, Loader2 } from 'lucide-react';
+import { Mail, User, Phone, Lock, Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { AxiosError } from 'axios';
 
 import { createUserSchema, type CreateUserForm as CreateUserFormValues } from '../../../schemas/createUser.schema';
-import FormField from '../../../components/form/FormField';
-import PasswordInput from '../../../components/form/PasswordInput';
 import { useAuth } from '../hooks/useAuth';
-import { getGoogleOAuth2Url } from '../api/auth.api';
 import { getFriendlyErrorMessage } from '../../../shared/utils/authErrorHandler';
 
 interface BackendValidationError {
@@ -22,41 +20,65 @@ export interface CreateUserFormProps {
   onSuccess?: () => void;
 }
 
+/**
+ * Đánh giá độ mạnh mật khẩu hiển thị thanh chỉ báo
+ */
+const evaluatePasswordStrength = (pwd: string) => {
+  if (!pwd) return { level: 'empty', label: '', score: 0 };
+  const hasLetters = /[a-zA-Z]/.test(pwd);
+  const hasDigits = /\d/.test(pwd);
+  const hasUpper = /[A-Z]/.test(pwd);
+  const hasLower = /[a-z]/.test(pwd);
+  const hasSpecial = /[^a-zA-Z0-9]/.test(pwd);
+
+  const meetsBasic = pwd.length >= 8 && hasLetters && hasDigits;
+  if (!meetsBasic) {
+    return { level: 'weak', label: 'Yếu', score: 1 };
+  }
+  const isAdvanced = pwd.length >= 10 && ((hasUpper && hasLower) || hasSpecial);
+  if (isAdvanced) {
+    return { level: 'strong', label: 'Mạnh', score: 3 };
+  }
+  return { level: 'medium', label: 'Trung bình', score: 2 };
+};
+
 export default function CreateUserForm({ onSuccess }: CreateUserFormProps) {
   const { register: registerAuth } = useAuth();
   const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
 
-  // Khởi tạo React Hook Form với chế độ validate onTouched và Zod schema
+  // Khởi tạo React Hook Form validate onBlur và revalidate onChange
   const {
     register,
     handleSubmit,
     setError,
     reset,
     watch,
-    formState: { errors, isSubmitting, isValid },
+    formState: { errors, isSubmitting },
   } = useForm<CreateUserFormValues>({
     resolver: zodResolver(createUserSchema),
-    mode: 'onTouched', // Validate khi người dùng blur khỏi field, sau đó realtime khi gõ
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       username: '',
+      phone: '',
       email: '',
       password: '',
     },
   });
 
-  // Watch password để truyền vào PasswordInput vẽ thanh đo độ mạnh mật khẩu
-  const watchedPassword = watch('password');
+  const watchedPassword = watch('password') || '';
+  const pwdStrength = evaluatePasswordStrength(watchedPassword);
 
   /**
    * Xử lý gửi form đăng ký lên Backend
    */
   const onSubmit = async (data: CreateUserFormValues) => {
-    // Chuẩn hóa dữ liệu theo đúng yêu cầu:
-    // - Trim username & email
-    // - Chuyển email sang toLowerCase
-    // - TUYỆT ĐỐI KHÔNG trim password
+    const cleanedPhone = data.phone.trim().replace(/\s+/g, '');
     const payload = {
       username: data.username.trim(),
+      phone: cleanedPhone,
+      phoneNumber: cleanedPhone,
       email: data.email.trim().toLowerCase(),
       password: data.password,
     };
@@ -64,8 +86,8 @@ export default function CreateUserForm({ onSuccess }: CreateUserFormProps) {
     try {
       const response = await registerAuth(payload);
 
-      toast.success('Đăng ký tài khoản thành công!');
-      reset(); // Reset form sau khi thành công
+      toast.success('Khởi tạo hồ sơ chuyên gia thành công!');
+      reset();
 
       if (onSuccess) {
         onSuccess();
@@ -79,11 +101,11 @@ export default function CreateUserForm({ onSuccess }: CreateUserFormProps) {
       const status = axiosError.response?.status;
       const resData = axiosError.response?.data;
 
-      // 1. Xử lý lỗi 400 (Validation từ Backend): dạng { errors: [{ field, message }] }
+      // 1. Validation từ Backend
       if (status === 400 && Array.isArray(resData?.errors)) {
         resData.errors.forEach(({ field, message }) => {
-          if (field === 'username' || field === 'email' || field === 'password') {
-            setError(field, {
+          if (field === 'username' || field === 'email' || field === 'password' || field === 'phone' || field === 'phoneNumber') {
+            setError(field === 'phoneNumber' ? 'phone' : (field as 'username' | 'email' | 'password' | 'phone'), {
               type: 'server',
               message,
             });
@@ -92,7 +114,7 @@ export default function CreateUserForm({ onSuccess }: CreateUserFormProps) {
         return;
       }
 
-      // 2. Xử lý lỗi 409 (Conflict - Trùng lặp username hoặc email)
+      // 2. Conflict username, phone hoặc email (409)
       if (status === 409) {
         const errorMsg = (resData?.message || '').toLowerCase();
         const errorCode = resData?.code || '';
@@ -102,6 +124,12 @@ export default function CreateUserForm({ onSuccess }: CreateUserFormProps) {
           errorMsg.includes('username') ||
           errorMsg.includes('tên người dùng');
 
+        const isPhoneConflict =
+          errorCode.includes('PHONE') ||
+          errorMsg.includes('phone') ||
+          errorMsg.includes('số điện thoại') ||
+          errorMsg.includes('sđt');
+
         const isEmailConflict =
           errorCode.includes('EMAIL') ||
           errorMsg.includes('email');
@@ -109,23 +137,31 @@ export default function CreateUserForm({ onSuccess }: CreateUserFormProps) {
         if (isUsernameConflict) {
           setError('username', {
             type: 'server',
-            message: 'Tên người dùng đã tồn tại',
+            message: 'Tên người dùng này đã tồn tại',
           });
+          toast.error('Tên người dùng này đã tồn tại');
+        }
+        if (isPhoneConflict) {
+          setError('phone', {
+            type: 'server',
+            message: 'Số điện thoại này đã được đăng ký',
+          });
+          toast.error('Số điện thoại này đã được đăng ký');
         }
         if (isEmailConflict) {
           setError('email', {
             type: 'server',
-            message: 'Email đã được sử dụng',
+            message: 'Email này đã được đăng ký',
           });
+          toast.error('Email này đã được đăng ký');
         }
-        if (!isUsernameConflict && !isEmailConflict) {
-          // Trường hợp thông báo chung không tách field
-          toast.error(resData?.message || 'Tài khoản hoặc email đã tồn tại');
+        if (!isUsernameConflict && !isPhoneConflict && !isEmailConflict) {
+          toast.error(resData?.message || 'Tài khoản, số điện thoại hoặc email đã tồn tại');
         }
         return;
       }
 
-      // 3. Lỗi khác (500, Network error, timeout): Toast thông báo chung, giữ nguyên dữ liệu đã nhập
+      // 3. Lỗi mạng / máy chủ
       const message = getFriendlyErrorMessage(
         axiosError,
         'Không thể kết nối đến máy chủ. Vui lòng kiểm tra mạng và thử lại.'
@@ -134,144 +170,190 @@ export default function CreateUserForm({ onSuccess }: CreateUserFormProps) {
     }
   };
 
-  const handleGoogleRegister = () => {
-    window.location.href = getGoogleOAuth2Url();
-  };
-
   return (
-    <div className="space-y-6">
-      {/* Nút đăng ký nhanh bằng Google */}
-      <div>
-        <button
-          type="button"
-          onClick={handleGoogleRegister}
-          disabled={isSubmitting}
-          className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-750 hover:border-gray-300 dark:hover:border-gray-600 shadow-sm transition-all duration-200 active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
-        >
-          <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
-            <path
-              fill="#4285F4"
-              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-            />
-            <path
-              fill="#34A853"
-              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-            />
-            <path
-              fill="#FBBC05"
-              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-            />
-            <path
-              fill="#EA4335"
-              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-            />
-          </svg>
-          <span>Đăng ký với Google</span>
-        </button>
-      </div>
-
-      {/* Đường phân cách */}
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-gray-200 dark:border-gray-800" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-white dark:bg-gray-900 px-3 text-gray-400 dark:text-gray-500 font-medium tracking-wider">
-            hoặc đăng ký với thông tin
-          </span>
-        </div>
+    <div className="w-full">
+      {/* Tiêu đề của Form Card */}
+      <div className="mb-6">
+        <h2 className="text-2xl sm:text-[26px] font-bold text-gray-900 dark:text-white tracking-tight leading-snug">
+          Khởi tạo hồ sơ <span className="text-[#00d68f]">chuyên gia</span>
+        </h2>
+        <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1.5 leading-relaxed">
+          Điền đầy đủ thông tin để bắt đầu hành trình cùng ZenFit
+        </p>
       </div>
 
       {/* Form đăng ký chính */}
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
-        {/* Field 1: Username */}
-        <FormField
-          id="username"
-          label="Tên người dùng"
-          error={errors.username?.message}
-          required
-        >
+        {/* Field 1: Tên người dùng */}
+        <div>
+          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-200 mb-1.5">
+            Tên người dùng <span className="text-red-500">*</span>
+          </label>
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
-              <User className="h-5 w-5" />
-            </div>
+            <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500 pointer-events-none" />
             <input
-              id="username"
               type="text"
               autoComplete="username"
               placeholder="VD: zenfit_user"
               aria-invalid={Boolean(errors.username)}
-              aria-describedby={errors.username ? 'username-error' : undefined}
               {...register('username')}
-              className={`block w-full pl-11 pr-4 py-3 border rounded-xl sm:text-sm transition-colors outline-none bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 ${
+              className={`w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-[#132230] border rounded-xl text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-hidden transition-all ${
                 errors.username
-                  ? 'border-red-500 focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-red-50/20 dark:bg-red-950/20'
-                  : 'border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white dark:focus:bg-gray-800'
+                  ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500'
+                  : 'border-gray-200 dark:border-[#20364b] focus:border-[#00d68f] focus:ring-1 focus:ring-[#00d68f]'
               }`}
             />
           </div>
-        </FormField>
+          {errors.username?.message && (
+            <p className="text-xs text-red-500 dark:text-red-400 mt-1 animate-fadeIn">{errors.username.message}</p>
+          )}
+        </div>
 
-        {/* Field 2: Email */}
-        <FormField
-          id="email"
-          label="Địa chỉ Email"
-          error={errors.email?.message}
-          required
-        >
+        {/* Field 2: Số điện thoại */}
+        <div>
+          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-200 mb-1.5">
+            Số điện thoại <span className="text-red-500">*</span>
+          </label>
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
-              <Mail className="h-5 w-5" />
-            </div>
+            <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500 pointer-events-none" />
             <input
-              id="email"
+              type="tel"
+              autoComplete="tel"
+              placeholder="VD: 0912345678"
+              aria-invalid={Boolean(errors.phone)}
+              {...register('phone')}
+              className={`w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-[#132230] border rounded-xl text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-hidden transition-all ${
+                errors.phone
+                  ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500'
+                  : 'border-gray-200 dark:border-[#20364b] focus:border-[#00d68f] focus:ring-1 focus:ring-[#00d68f]'
+              }`}
+            />
+          </div>
+          {errors.phone?.message && (
+            <p className="text-xs text-red-500 dark:text-red-400 mt-1 animate-fadeIn">{errors.phone.message}</p>
+          )}
+        </div>
+
+        {/* Field 3: Địa chỉ Email */}
+        <div>
+          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-200 mb-1.5">
+            Địa chỉ Email <span className="text-red-500">*</span>
+          </label>
+          <div className="relative">
+            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500 pointer-events-none" />
+            <input
               type="email"
               autoComplete="email"
               placeholder="tenban@example.com"
               aria-invalid={Boolean(errors.email)}
-              aria-describedby={errors.email ? 'email-error' : undefined}
               {...register('email')}
-              className={`block w-full pl-11 pr-4 py-3 border rounded-xl sm:text-sm transition-colors outline-none bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 ${
+              className={`w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-[#132230] border rounded-xl text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-hidden transition-all ${
                 errors.email
-                  ? 'border-red-500 focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-red-50/20 dark:bg-red-950/20'
-                  : 'border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white dark:focus:bg-gray-800'
+                  ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500'
+                  : 'border-gray-200 dark:border-[#20364b] focus:border-[#00d68f] focus:ring-1 focus:ring-[#00d68f]'
               }`}
             />
           </div>
-        </FormField>
+          {errors.email?.message && (
+            <p className="text-xs text-red-500 dark:text-red-400 mt-1 animate-fadeIn">{errors.email.message}</p>
+          )}
+        </div>
 
-        {/* Field 3: Password */}
-        <FormField
-          id="password"
-          label="Mật khẩu"
-          error={errors.password?.message}
-          required
-        >
-          <PasswordInput
-            id="password"
-            autoComplete="new-password"
-            placeholder="Nhập mật khẩu (tối thiểu 8 ký tự, có chữ và số)"
-            error={errors.password?.message}
-            value={watchedPassword || ''}
-            showStrengthBar={true}
-            {...register('password')}
-          />
-        </FormField>
+        {/* Field 4: Mật khẩu */}
+        <div>
+          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-200 mb-1.5">
+            Mật khẩu <span className="text-red-500">*</span>
+          </label>
+          <div className="relative">
+            <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500 pointer-events-none" />
+            <input
+              type={showPassword ? 'text' : 'password'}
+              autoComplete="new-password"
+              placeholder="Tối thiểu 8 ký tự, gồm chữ và số"
+              aria-invalid={Boolean(errors.password)}
+              {...register('password')}
+              className={`w-full pl-10 pr-11 py-3 bg-gray-50 dark:bg-[#132230] border rounded-xl text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-hidden transition-all ${
+                errors.password
+                  ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500'
+                  : 'border-gray-200 dark:border-[#20364b] focus:border-[#00d68f] focus:ring-1 focus:ring-[#00d68f]'
+              }`}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors cursor-pointer"
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
 
-        {/* Nút Submit: Bị disable khi đang submit hoặc form chưa hợp lệ */}
+          {errors.password?.message && (
+            <p className="text-xs text-red-500 dark:text-red-400 mt-1 animate-fadeIn">{errors.password.message}</p>
+          )}
+
+          {/* Thanh đo độ mạnh mật khẩu cập nhật lúc gõ */}
+          {watchedPassword.length > 0 && (
+            <div className="space-y-1.5 pt-2 animate-fadeIn">
+              <div className="flex items-center gap-1.5 h-1.5 w-full">
+                <div
+                  className={`h-full flex-1 rounded-full transition-colors duration-300 ${
+                    pwdStrength.score >= 1
+                      ? pwdStrength.level === 'weak'
+                        ? 'bg-red-500'
+                        : pwdStrength.level === 'medium'
+                          ? 'bg-amber-400'
+                          : 'bg-[#00d68f]'
+                      : 'bg-gray-200 dark:bg-gray-700'
+                  }`}
+                />
+                <div
+                  className={`h-full flex-1 rounded-full transition-colors duration-300 ${
+                    pwdStrength.score >= 2
+                      ? pwdStrength.level === 'medium'
+                        ? 'bg-amber-400'
+                        : 'bg-[#00d68f]'
+                      : 'bg-gray-200 dark:bg-gray-700'
+                  }`}
+                />
+                <div
+                  className={`h-full flex-1 rounded-full transition-colors duration-300 ${
+                    pwdStrength.score >= 3 ? 'bg-[#00d68f]' : 'bg-gray-200 dark:bg-gray-700'
+                  }`}
+                />
+              </div>
+              <div className="flex justify-between items-center text-[11px] text-gray-500 dark:text-gray-400">
+                <span>Độ mạnh mật khẩu:</span>
+                <span
+                  className={`font-semibold ${
+                    pwdStrength.level === 'weak'
+                      ? 'text-red-500 dark:text-red-400'
+                      : pwdStrength.level === 'medium'
+                        ? 'text-amber-500 dark:text-amber-400'
+                        : 'text-[#00d68f]'
+                  }`}
+                >
+                  {pwdStrength.label}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Nút Submit: Tạo tài khoản */}
         <button
           type="submit"
-          disabled={isSubmitting || !isValid}
-          className="w-full flex justify-center items-center gap-2 py-3.5 px-4 border border-transparent rounded-xl shadow-md text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all duration-200 hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed hover:-translate-y-0.5 active:translate-y-0 mt-4 cursor-pointer"
+          disabled={isSubmitting}
+          className="w-full mt-4 py-3.5 px-4 rounded-xl bg-[#00d68f] hover:bg-[#00be7f] active:bg-[#00a870] text-white font-semibold text-sm sm:text-base flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 transition-all duration-200 hover:shadow-emerald-500/40 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
         >
           {isSubmitting ? (
             <>
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Loader2 className="h-5 w-5 animate-spin" />
               <span>Đang tạo tài khoản...</span>
             </>
           ) : (
             <>
-              <span>Đăng ký tài khoản</span>
+              <span>Tạo tài khoản</span>
               <ArrowRight className="h-4 w-4" />
             </>
           )}
@@ -279,11 +361,11 @@ export default function CreateUserForm({ onSuccess }: CreateUserFormProps) {
       </form>
 
       {/* Điều hướng đăng nhập */}
-      <div className="pt-2 text-center text-sm">
-        <span className="text-gray-500 dark:text-gray-400">Đã có tài khoản? </span>
+      <div className="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
+        <span>Đã có tài khoản? </span>
         <Link
           to="/login"
-          className="font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 hover:underline transition-colors"
+          className="font-semibold text-[#00d68f] hover:underline transition-colors"
         >
           Đăng nhập ngay
         </Link>

@@ -76,7 +76,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
             onChange={onChange}
             aria-invalid={Boolean(error)}
             aria-describedby={error ? `${id}-error` : undefined}
-            className={`block w-full pl-11 pr-11 py-3 border rounded-xl sm:text-sm transition-colors outline-none bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 ${
+            className={`block w-full pl-11 pr-11 py-3 min-h-[48px] border rounded-xl text-base sm:text-sm transition-colors outline-hidden bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 ${
               error
                 ? 'border-red-500 focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-red-50/20 dark:bg-red-950/20'
                 : 'border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white dark:focus:bg-gray-800'

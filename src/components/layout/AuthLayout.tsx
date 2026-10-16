@@ -8,9 +8,17 @@ interface AuthLayoutProps {
   children: ReactNode;
   title: string;
   subtitle: string;
+  leftTitle?: string;
+  leftSubtitle?: string;
 }
 
-export default function AuthLayout({ children, title, subtitle }: AuthLayoutProps) {
+export default function AuthLayout({
+  children,
+  title,
+  subtitle,
+  leftTitle = 'Quản lý hội viên chuyên nghiệp hơn',
+  leftSubtitle = 'Theo dõi tiến độ, lên lịch tập và chăm sóc từng hội viên dễ dàng, để bạn tập trung vào việc quan trọng nhất: giúp học viên đạt mục tiêu.',
+}: AuthLayoutProps) {
   const { theme, toggleTheme } = useSettings();
 
   return (
@@ -29,15 +37,15 @@ export default function AuthLayout({ children, title, subtitle }: AuthLayoutProp
         <div className="relative z-10 p-10 xl:p-14 text-center text-white max-w-lg">
           <Link to="/" className="inline-flex items-center gap-3 mb-8 cursor-pointer group">
             <div className="relative overflow-hidden rounded-2xl bg-white/10 backdrop-blur-md p-2 shadow-sm transition-all duration-300 group-hover:scale-110">
-              <img src={logo} alt="Zenfit Logo" className="h-12 w-12 object-contain" />
+              <img src={logo} alt="ZenFit Logo" className="h-12 w-12 object-contain" />
             </div>
             <h1 className="text-4xl font-bold tracking-tight">
-              Zen<span className="text-emerald-400">fit</span>
+              Zen<span className="text-emerald-400">Fit</span>
             </h1>
           </Link>
-          <h2 className="text-3xl font-bold mb-4 leading-tight">Nâng tầm hành trình thể hình của bạn</h2>
+          <h2 className="text-3xl font-bold mb-4 leading-tight">{leftTitle}</h2>
           <p className="text-emerald-50 text-base leading-relaxed">
-            Gia nhập cộng đồng Zenfit để theo dõi tiến trình, nhận kế hoạch luyện tập cá nhân hóa và chinh phục phiên bản khỏe đẹp nhất của bản thân.
+            {leftSubtitle}
           </p>
         </div>
       </div>
@@ -47,9 +55,9 @@ export default function AuthLayout({ children, title, subtitle }: AuthLayoutProp
         {/* Top bar with Mobile Logo & Theme Toggle */}
         <div className="absolute top-4 sm:top-6 left-4 sm:left-6 right-4 sm:right-6 flex items-center justify-between z-10">
           <Link to="/" className="flex items-center gap-2 lg:hidden">
-            <img src={logo} alt="Zenfit" className="h-7 w-7 sm:h-8 sm:w-8 object-contain" />
+            <img src={logo} alt="ZenFit" className="h-7 w-7 sm:h-8 sm:w-8 object-contain" />
             <span className="text-lg sm:text-xl font-bold text-gray-800 dark:text-gray-100">
-              Zen<span className="text-emerald-500">fit</span>
+              Zen<span className="text-emerald-500">Fit</span>
             </span>
           </Link>
           <div className="ml-auto">
