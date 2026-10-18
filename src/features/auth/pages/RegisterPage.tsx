@@ -1,11 +1,40 @@
-import { Link } from 'react-router-dom';
-import { Users, TrendingUp, Calendar, Shield, Sun, Moon } from 'lucide-react';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import {
+  Users,
+  TrendingUp,
+  Calendar,
+  Shield,
+  Sun,
+  Moon,
+  CheckCircle2,
+  ShieldCheck,
+} from 'lucide-react';
 import logo from '../../../assets/logo/logo-zenfit.png';
 import { useSettings } from '../../../context/SettingsContext';
 import CreateUserForm from '../components/CreateUserForm';
+import OtpForm from '../components/OtpForm';
 
 export default function RegisterPage() {
   const { theme, toggleTheme } = useSettings();
+  const navigate = useNavigate();
+
+  // Quản lý 2 bước: 1 - Đăng ký thông tin, 2 - Xác thực mã OTP
+  const [currentStep, setCurrentStep] = useState<1 | 2>(1);
+  const [registeredEmail, setRegisteredEmail] = useState<string>('');
+
+  const handleRegisterSuccess = (email: string) => {
+    setRegisteredEmail(email);
+    setCurrentStep(2);
+  };
+
+  const handleBackToRegister = () => {
+    setCurrentStep(1);
+  };
+
+  const handleOtpSuccess = () => {
+    navigate('/login', { replace: true });
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#070f15] text-gray-900 dark:text-white relative overflow-x-hidden font-poppins selection:bg-[#00d68f] selection:text-black transition-colors duration-300">
@@ -122,7 +151,6 @@ export default function RegisterPage() {
 
               {/* 4 Feature Cards (2x2) */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Card 1 */}
                 <div className="bg-white/85 dark:bg-[#09141c]/80 backdrop-blur-md border border-gray-200/90 dark:border-[#162736] hover:border-[#00d68f]/40 shadow-sm shadow-gray-200/50 dark:shadow-none rounded-2xl p-5 transition-all duration-300 group">
                   <div className="h-10 w-10 rounded-xl bg-emerald-50 dark:bg-[#0c221b] border border-emerald-200/80 dark:border-[#00d68f]/20 flex items-center justify-center mb-3 text-emerald-600 dark:text-[#00d68f]">
                     <Users className="h-5 w-5" />
@@ -136,7 +164,6 @@ export default function RegisterPage() {
                   </p>
                 </div>
 
-                {/* Card 2 */}
                 <div className="bg-white/85 dark:bg-[#09141c]/80 backdrop-blur-md border border-gray-200/90 dark:border-[#162736] hover:border-[#00d68f]/40 shadow-sm shadow-gray-200/50 dark:shadow-none rounded-2xl p-5 transition-all duration-300 group">
                   <div className="h-10 w-10 rounded-xl bg-emerald-50 dark:bg-[#0c221b] border border-emerald-200/80 dark:border-[#00d68f]/20 flex items-center justify-center mb-3 text-emerald-600 dark:text-[#00d68f]">
                     <TrendingUp className="h-5 w-5" />
@@ -150,7 +177,6 @@ export default function RegisterPage() {
                   </p>
                 </div>
 
-                {/* Card 3 */}
                 <div className="bg-white/85 dark:bg-[#09141c]/80 backdrop-blur-md border border-gray-200/90 dark:border-[#162736] hover:border-[#00d68f]/40 shadow-sm shadow-gray-200/50 dark:shadow-none rounded-2xl p-5 transition-all duration-300 group">
                   <div className="h-10 w-10 rounded-xl bg-emerald-50 dark:bg-[#0c221b] border border-emerald-200/80 dark:border-[#00d68f]/20 flex items-center justify-center mb-3 text-emerald-600 dark:text-[#00d68f]">
                     <Calendar className="h-5 w-5" />
@@ -164,7 +190,6 @@ export default function RegisterPage() {
                   </p>
                 </div>
 
-                {/* Card 4 */}
                 <div className="bg-white/85 dark:bg-[#09141c]/80 backdrop-blur-md border border-gray-200/90 dark:border-[#162736] hover:border-[#00d68f]/40 shadow-sm shadow-gray-200/50 dark:shadow-none rounded-2xl p-5 transition-all duration-300 group">
                   <div className="h-10 w-10 rounded-xl bg-emerald-50 dark:bg-[#0c221b] border border-emerald-200/80 dark:border-[#00d68f]/20 flex items-center justify-center mb-3 text-emerald-600 dark:text-[#00d68f]">
                     <Shield className="h-5 w-5" />
@@ -182,8 +207,83 @@ export default function RegisterPage() {
 
             {/* Cột phải: Form Đăng ký nổi (Card) */}
             <div className="w-full lg:col-span-5 flex justify-center py-4">
-              <div className="w-full max-w-md bg-white/95 dark:bg-[#0c1620]/90 backdrop-blur-xl border border-gray-200/90 dark:border-[#1a2c3d] rounded-3xl p-6 sm:p-8 md:p-9 shadow-xl shadow-gray-200/60 dark:shadow-2xl dark:shadow-black/80 transition-colors duration-300">
-                <CreateUserForm />
+              <div className="w-full max-w-md bg-white/95 dark:bg-[#0c1620]/90 backdrop-blur-xl border border-gray-200/90 dark:border-[#1a2c3d] rounded-3xl p-6 sm:p-8 md:p-9 shadow-xl shadow-gray-200/60 dark:shadow-2xl dark:shadow-black/80 transition-all duration-300">
+                {/* Stepper Wizard Indicator */}
+                <div className="mb-6 pb-5 border-b border-gray-100 dark:border-[#1a2c3d]">
+                  <div className="flex items-center justify-between">
+                    {/* Bước 1 */}
+                    <div className="flex items-center gap-2">
+                      <div
+                        className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                          currentStep === 1
+                            ? 'bg-[#00d68f] text-white ring-4 ring-emerald-500/20 shadow-xs'
+                            : 'bg-emerald-500/20 text-[#00d68f]'
+                        }`}
+                      >
+                        {currentStep === 2 ? (
+                          <CheckCircle2 className="h-4 w-4" />
+                        ) : (
+                          '1'
+                        )}
+                      </div>
+                      <span
+                        className={`text-xs font-semibold ${
+                          currentStep === 1
+                            ? 'text-gray-900 dark:text-white'
+                            : 'text-gray-500 dark:text-gray-400'
+                        }`}
+                      >
+                        Thông tin
+                      </span>
+                    </div>
+
+                    {/* Đường nối giữa 2 bước */}
+                    <div
+                      className={`flex-1 h-0.5 mx-3 rounded-full transition-all duration-500 ${
+                        currentStep === 2
+                          ? 'bg-[#00d68f]'
+                          : 'bg-gray-200 dark:bg-gray-700'
+                      }`}
+                    />
+
+                    {/* Bước 2 */}
+                    <div className="flex items-center gap-2">
+                      <div
+                        className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                          currentStep === 2
+                            ? 'bg-[#00d68f] text-white ring-4 ring-emerald-500/20 shadow-xs'
+                            : 'bg-gray-100 dark:bg-[#142330] text-gray-400 dark:text-gray-500'
+                        }`}
+                      >
+                        {currentStep === 2 ? (
+                          <ShieldCheck className="h-4 w-4" />
+                        ) : (
+                          '2'
+                        )}
+                      </div>
+                      <span
+                        className={`text-xs font-semibold ${
+                          currentStep === 2
+                            ? 'text-gray-900 dark:text-white'
+                            : 'text-gray-400 dark:text-gray-500'
+                        }`}
+                      >
+                        Xác thực OTP
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Render theo từng bước */}
+                {currentStep === 1 ? (
+                  <CreateUserForm onSuccess={handleRegisterSuccess} />
+                ) : (
+                  <OtpForm
+                    initialEmail={registeredEmail}
+                    onBackToRegister={handleBackToRegister}
+                    onSuccess={handleOtpSuccess}
+                  />
+                )}
               </div>
             </div>
           </div>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 export interface NavItem {
   id: string;
@@ -9,8 +9,7 @@ export interface NavItem {
 
 export const DEFAULT_NAV_ITEMS: NavItem[] = [
   { id: 'overview', label: 'Tổng quan', href: '#overview' },
-  { id: 'solutions', label: 'Giải pháp', href: '#solutions' },
-  { id: 'for-pt', label: 'Dành cho PT', href: '#for-pt' },
+  { id: 'features', label: 'Tính năng', href: '#features' },
   { id: 'pricing', label: 'Bảng giá', href: '#pricing' },
   { id: 'docs', label: 'Tài liệu', href: '#docs' },
 ];
@@ -30,11 +29,27 @@ export default function NavMenu({
 }: NavMenuProps) {
   const [internalActiveId, setInternalActiveId] = useState<string>('overview');
   const activeId = externalActiveId ?? internalActiveId;
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  const handleClick = (id: string) => {
-    setInternalActiveId(id);
+  const handleClick = (e: React.MouseEvent, item: NavItem) => {
+    setInternalActiveId(item.id);
     if (onItemClick) {
-      onItemClick(id);
+      onItemClick(item.id);
+    }
+
+    if (item.href.startsWith('#')) {
+      e.preventDefault();
+      const targetId = item.href.slice(1);
+      if (location.pathname === '/') {
+        const el = document.getElementById(targetId);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth' });
+          window.history.pushState(null, '', item.href);
+        }
+      } else {
+        navigate(`/${item.href}`);
+      }
     }
   };
 
@@ -47,7 +62,7 @@ export default function NavMenu({
             <Link
               key={item.id}
               to={item.href}
-              onClick={() => handleClick(item.id)}
+              onClick={(e) => handleClick(e, item)}
               className={`px-4 py-3 rounded-xl text-sm font-medium transition-colors flex items-center justify-between ${
                 isActive
                   ? 'text-[#00d68f] bg-emerald-500/10 dark:bg-[#00d68f]/10 font-semibold'
@@ -73,7 +88,7 @@ export default function NavMenu({
           <Link
             key={item.id}
             to={item.href}
-            onClick={() => handleClick(item.id)}
+            onClick={(e) => handleClick(e, item)}
             className={`relative py-2 text-sm font-medium transition-colors duration-200 outline-hidden focus:outline-hidden ${
               isActive
                 ? 'text-[#00d68f] font-semibold'

@@ -2,26 +2,37 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, User, Phone, Lock, Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-react';
+import {
+  Mail,
+  User,
+  Phone,
+  Lock,
+  Eye,
+  EyeOff,
+  ArrowRight,
+  Loader2,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import type { AxiosError } from 'axios';
 
-import { createUserSchema, type CreateUserForm as CreateUserFormValues } from '../../../schemas/createUser.schema';
-import { useAuth } from '../hooks/useAuth';
+import {
+  registerSchema,
+  type RegisterFormValues,
+} from '../../../schemas/createUser.schema';
+import { authApi } from '../../../api/auth.api';
+import type { CreateUserReq, ErrorResponse } from '../../../types/auth.types';
 import { getFriendlyErrorMessage } from '../../../shared/utils/authErrorHandler';
 
-interface BackendValidationError {
-  errors?: Array<{ field: string; message: string }>;
-  code?: string;
-  message?: string;
+export interface CreateUserFormProps {
+  onSuccess?: (registeredEmail: string) => void;
 }
 
-export interface CreateUserFormProps {
-  onSuccess?: () => void;
-}
+const STORAGE_EMAIL_KEY = 'zenfit_registered_email';
+const STORAGE_PENDING_REG_KEY = 'zenfit_pending_registration';
+const STORAGE_EXPIRES_KEY = 'zenfit_otp_expires_at';
 
 /**
- * Đánh giá độ mạnh mật khẩu hiển thị thanh chỉ báo
+ * Đánh giá độ mạnh mật khẩu và hiển thị thanh chỉ báo trực quan
  */
 const evaluatePasswordStrength = (pwd: string) => {
   if (!pwd) return { level: 'empty', label: '', score: 0 };
@@ -43,20 +54,19 @@ const evaluatePasswordStrength = (pwd: string) => {
 };
 
 export default function CreateUserForm({ onSuccess }: CreateUserFormProps) {
-  const { register: registerAuth } = useAuth();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Khởi tạo React Hook Form validate onBlur và revalidate onChange
+  // Khởi tạo React Hook Form validate onBlur và revalidate onChange với Zod
   const {
     register,
     handleSubmit,
     setError,
-    reset,
     watch,
     formState: { errors, isSubmitting },
-  } = useForm<CreateUserFormValues>({
-    resolver: zodResolver(createUserSchema),
+  } = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
     mode: 'onBlur',
     reValidateMode: 'onChange',
     defaultValues: {
@@ -64,6 +74,7 @@ export default function CreateUserForm({ onSuccess }: CreateUserFormProps) {
       phone: '',
       email: '',
       password: '',
+      confirmPassword: '',
     },
   });
 
@@ -73,51 +84,83 @@ export default function CreateUserForm({ onSuccess }: CreateUserFormProps) {
   /**
    * Xử lý gửi form đăng ký lên Backend
    */
-  const onSubmit = async (data: CreateUserFormValues) => {
+  const onSubmit = async (data: RegisterFormValues) => {
     const cleanedPhone = data.phone.trim().replace(/\s+/g, '');
-    const payload = {
-      username: data.username.trim(),
+    const cleanEmail = data.email.trim().toLowerCase();
+    const cleanUsername = data.username.trim();
+
+    // Payload chỉ chứa các trường backend yêu cầu (không gửi confirmPassword)
+    const payload: CreateUserReq = {
+      username: cleanUsername,
       phone: cleanedPhone,
-      phoneNumber: cleanedPhone,
-      email: data.email.trim().toLowerCase(),
+      email: cleanEmail,
       password: data.password,
     };
 
     try {
-      const response = await registerAuth(payload);
+      const response = await authApi.register(payload);
 
-      toast.success('Khởi tạo hồ sơ chuyên gia thành công!');
-      reset();
+      // Lưu lại thông tin vào sessionStorage phục vụ xác thực OTP và gửi lại mã nếu cần
+      sessionStorage.setItem(STORAGE_EMAIL_KEY, cleanEmail);
+      sessionStorage.setItem(STORAGE_PENDING_REG_KEY, JSON.stringify(payload));
+      sessionStorage.setItem(
+        STORAGE_EXPIRES_KEY,
+        String(Date.now() + 300 * 1000)
+      );
+
+      toast.success(response.message || 'Đăng ký tài khoản thành công! Vui lòng xác thực mã OTP.');
 
       if (onSuccess) {
-        onSuccess();
-      } else if (response.requiresOtp) {
-        navigate(`/verify-otp?email=${encodeURIComponent(payload.email)}`);
+        onSuccess(cleanEmail);
       } else {
-        navigate('/login');
+        navigate(`/verify-otp?email=${encodeURIComponent(cleanEmail)}`);
       }
     } catch (err: unknown) {
-      const axiosError = err as AxiosError<BackendValidationError>;
+      const axiosError = err as AxiosError<ErrorResponse>;
       const status = axiosError.response?.status;
       const resData = axiosError.response?.data;
 
-      // 1. Validation từ Backend
-      if (status === 400 && Array.isArray(resData?.errors)) {
-        resData.errors.forEach(({ field, message }) => {
-          if (field === 'username' || field === 'email' || field === 'password' || field === 'phone' || field === 'phoneNumber') {
-            setError(field === 'phoneNumber' ? 'phone' : (field as 'username' | 'email' | 'password' | 'phone'), {
-              type: 'server',
-              message,
-            });
-          }
-        });
+      // 1. Lỗi 422: Validation từ Backend
+      // Backend trả về detail dạng { "email": ["Email không hợp lệ"], "username": ["..."] }
+      if (status === 422) {
+        const detail = resData?.detail;
+        if (detail && typeof detail === 'object') {
+          Object.entries(detail).forEach(([field, msg]) => {
+            const message = Array.isArray(msg) ? msg[0] : String(msg);
+            if (['username', 'email', 'phone', 'password'].includes(field)) {
+              setError(field as 'username' | 'email' | 'phone' | 'password', {
+                type: 'server',
+                message,
+              });
+            }
+          });
+        }
+
+        // Tương thích thêm trường errors mảng nếu backend trả dạng array
+        if (Array.isArray(resData?.errors)) {
+          resData.errors.forEach(({ field, message }) => {
+            if (['username', 'email', 'phone', 'password'].includes(field)) {
+              setError(field as 'username' | 'email' | 'phone' | 'password', {
+                type: 'server',
+                message,
+              });
+            }
+          });
+        }
+
+        toast.error(resData?.message || 'Thông tin chưa hợp lệ. Vui lòng kiểm tra các ô nhập.');
         return;
       }
 
-      // 2. Conflict username, phone hoặc email (409)
+      // 2. Lỗi 409 Conflict: EMAIL_EXISTS hoặc trùng thông tin
       if (status === 409) {
-        const errorMsg = (resData?.message || '').toLowerCase();
         const errorCode = resData?.code || '';
+        const errorMsg = (resData?.message || '').toLowerCase();
+
+        const isEmailConflict =
+          errorCode === 'USER.EMAIL_EXISTS' ||
+          errorCode.includes('EMAIL') ||
+          errorMsg.includes('email');
 
         const isUsernameConflict =
           errorCode.includes('USERNAME') ||
@@ -127,12 +170,15 @@ export default function CreateUserForm({ onSuccess }: CreateUserFormProps) {
         const isPhoneConflict =
           errorCode.includes('PHONE') ||
           errorMsg.includes('phone') ||
-          errorMsg.includes('số điện thoại') ||
-          errorMsg.includes('sđt');
+          errorMsg.includes('số điện thoại');
 
-        const isEmailConflict =
-          errorCode.includes('EMAIL') ||
-          errorMsg.includes('email');
+        if (isEmailConflict) {
+          setError('email', {
+            type: 'server',
+            message: 'Email này đã tồn tại trên hệ thống',
+          });
+          toast.error('Email này đã tồn tại trên hệ thống');
+        }
 
         if (isUsernameConflict) {
           setError('username', {
@@ -141,6 +187,7 @@ export default function CreateUserForm({ onSuccess }: CreateUserFormProps) {
           });
           toast.error('Tên người dùng này đã tồn tại');
         }
+
         if (isPhoneConflict) {
           setError('phone', {
             type: 'server',
@@ -148,20 +195,14 @@ export default function CreateUserForm({ onSuccess }: CreateUserFormProps) {
           });
           toast.error('Số điện thoại này đã được đăng ký');
         }
-        if (isEmailConflict) {
-          setError('email', {
-            type: 'server',
-            message: 'Email này đã được đăng ký',
-          });
-          toast.error('Email này đã được đăng ký');
-        }
-        if (!isUsernameConflict && !isPhoneConflict && !isEmailConflict) {
-          toast.error(resData?.message || 'Tài khoản, số điện thoại hoặc email đã tồn tại');
+
+        if (!isEmailConflict && !isUsernameConflict && !isPhoneConflict) {
+          toast.error(resData?.message || 'Thông tin tài khoản đã tồn tại trên hệ thống');
         }
         return;
       }
 
-      // 3. Lỗi mạng / máy chủ
+      // 3. Lỗi chung / lỗi mạng
       const message = getFriendlyErrorMessage(
         axiosError,
         'Không thể kết nối đến máy chủ. Vui lòng kiểm tra mạng và thử lại.'
@@ -184,7 +225,7 @@ export default function CreateUserForm({ onSuccess }: CreateUserFormProps) {
 
       {/* Form đăng ký chính */}
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
-        {/* Field 1: Tên người dùng */}
+        {/* Field 1: Tên người dùng (Username) */}
         <div>
           <label className="block text-xs font-semibold text-gray-700 dark:text-gray-200 mb-1.5">
             Tên người dùng <span className="text-red-500">*</span>
@@ -194,7 +235,7 @@ export default function CreateUserForm({ onSuccess }: CreateUserFormProps) {
             <input
               type="text"
               autoComplete="username"
-              placeholder="VD: zenfit_user"
+              placeholder="VD: zenfit_user hoặc user.99"
               aria-invalid={Boolean(errors.username)}
               {...register('username')}
               className={`w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-[#132230] border rounded-xl text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-hidden transition-all ${
@@ -205,11 +246,13 @@ export default function CreateUserForm({ onSuccess }: CreateUserFormProps) {
             />
           </div>
           {errors.username?.message && (
-            <p className="text-xs text-red-500 dark:text-red-400 mt-1 animate-fadeIn">{errors.username.message}</p>
+            <p className="text-xs text-red-500 dark:text-red-400 mt-1 animate-fadeIn">
+              {errors.username.message}
+            </p>
           )}
         </div>
 
-        {/* Field 2: Số điện thoại */}
+        {/* Field 2: Số điện thoại (Phone) */}
         <div>
           <label className="block text-xs font-semibold text-gray-700 dark:text-gray-200 mb-1.5">
             Số điện thoại <span className="text-red-500">*</span>
@@ -219,7 +262,7 @@ export default function CreateUserForm({ onSuccess }: CreateUserFormProps) {
             <input
               type="tel"
               autoComplete="tel"
-              placeholder="VD: 0912345678"
+              placeholder="VD: 0912345678 hoặc +84912345678"
               aria-invalid={Boolean(errors.phone)}
               {...register('phone')}
               className={`w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-[#132230] border rounded-xl text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-hidden transition-all ${
@@ -230,7 +273,9 @@ export default function CreateUserForm({ onSuccess }: CreateUserFormProps) {
             />
           </div>
           {errors.phone?.message && (
-            <p className="text-xs text-red-500 dark:text-red-400 mt-1 animate-fadeIn">{errors.phone.message}</p>
+            <p className="text-xs text-red-500 dark:text-red-400 mt-1 animate-fadeIn">
+              {errors.phone.message}
+            </p>
           )}
         </div>
 
@@ -255,11 +300,13 @@ export default function CreateUserForm({ onSuccess }: CreateUserFormProps) {
             />
           </div>
           {errors.email?.message && (
-            <p className="text-xs text-red-500 dark:text-red-400 mt-1 animate-fadeIn">{errors.email.message}</p>
+            <p className="text-xs text-red-500 dark:text-red-400 mt-1 animate-fadeIn">
+              {errors.email.message}
+            </p>
           )}
         </div>
 
-        {/* Field 4: Mật khẩu */}
+        {/* Field 4: Mật khẩu (Password) */}
         <div>
           <label className="block text-xs font-semibold text-gray-700 dark:text-gray-200 mb-1.5">
             Mật khẩu <span className="text-red-500">*</span>
@@ -269,7 +316,7 @@ export default function CreateUserForm({ onSuccess }: CreateUserFormProps) {
             <input
               type={showPassword ? 'text' : 'password'}
               autoComplete="new-password"
-              placeholder="Tối thiểu 8 ký tự, gồm chữ và số"
+              placeholder="8-50 ký tự, gồm cả chữ và số"
               aria-invalid={Boolean(errors.password)}
               {...register('password')}
               className={`w-full pl-10 pr-11 py-3 bg-gray-50 dark:bg-[#132230] border rounded-xl text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-hidden transition-all ${
@@ -289,7 +336,9 @@ export default function CreateUserForm({ onSuccess }: CreateUserFormProps) {
           </div>
 
           {errors.password?.message && (
-            <p className="text-xs text-red-500 dark:text-red-400 mt-1 animate-fadeIn">{errors.password.message}</p>
+            <p className="text-xs text-red-500 dark:text-red-400 mt-1 animate-fadeIn">
+              {errors.password.message}
+            </p>
           )}
 
           {/* Thanh đo độ mạnh mật khẩu cập nhật lúc gõ */}
@@ -340,20 +389,55 @@ export default function CreateUserForm({ onSuccess }: CreateUserFormProps) {
           )}
         </div>
 
-        {/* Nút Submit: Tạo tài khoản */}
+        {/* Field 5: Xác nhận mật khẩu (Confirm Password) */}
+        <div>
+          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-200 mb-1.5">
+            Xác nhận mật khẩu <span className="text-red-500">*</span>
+          </label>
+          <div className="relative">
+            <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500 pointer-events-none" />
+            <input
+              type={showConfirmPassword ? 'text' : 'password'}
+              autoComplete="new-password"
+              placeholder="Nhập lại mật khẩu để xác nhận"
+              aria-invalid={Boolean(errors.confirmPassword)}
+              {...register('confirmPassword')}
+              className={`w-full pl-10 pr-11 py-3 bg-gray-50 dark:bg-[#132230] border rounded-xl text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-hidden transition-all ${
+                errors.confirmPassword
+                  ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500'
+                  : 'border-gray-200 dark:border-[#20364b] focus:border-[#00d68f] focus:ring-1 focus:ring-[#00d68f]'
+              }`}
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              aria-label={showConfirmPassword ? 'Ẩn xác nhận mật khẩu' : 'Hiện xác nhận mật khẩu'}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors cursor-pointer"
+            >
+              {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+          {errors.confirmPassword?.message && (
+            <p className="text-xs text-red-500 dark:text-red-400 mt-1 animate-fadeIn">
+              {errors.confirmPassword.message}
+            </p>
+          )}
+        </div>
+
+        {/* Nút Submit: Tiếp tục / Đăng ký */}
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full mt-4 py-3.5 px-4 rounded-xl bg-[#00d68f] hover:bg-[#00be7f] active:bg-[#00a870] text-white font-semibold text-sm sm:text-base flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 transition-all duration-200 hover:shadow-emerald-500/40 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+          className="w-full mt-4 py-3.5 px-4 rounded-xl bg-[#00d68f] hover:bg-[#00be7f] active:bg-[#00a870] text-white font-semibold text-sm sm:text-base flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 transition-all duration-200 hover:shadow-emerald-500/40 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none cursor-pointer"
         >
           {isSubmitting ? (
             <>
               <Loader2 className="h-5 w-5 animate-spin" />
-              <span>Đang tạo tài khoản...</span>
+              <span>Đang gửi thông tin đăng ký...</span>
             </>
           ) : (
             <>
-              <span>Tạo tài khoản</span>
+              <span>Tiếp tục xác thực OTP</span>
               <ArrowRight className="h-4 w-4" />
             </>
           )}

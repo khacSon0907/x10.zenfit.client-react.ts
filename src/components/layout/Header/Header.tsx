@@ -8,9 +8,10 @@ import NavMenu from './nav/NavMenu';
 interface HeaderProps {
   className?: string;
   activeNavId?: string;
+  onNavChange?: (id: string) => void;
 }
 
-export default function Header({ className = '', activeNavId }: HeaderProps) {
+export default function Header({ className = '', activeNavId, onNavChange }: HeaderProps) {
   const { theme, toggleTheme } = useSettings();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -26,7 +27,7 @@ export default function Header({ className = '', activeNavId }: HeaderProps) {
 
         {/* Center: Navigation Menu (Desktop) */}
         <div className="hidden md:flex items-center justify-center flex-1">
-          <NavMenu activeId={activeNavId} />
+          <NavMenu activeId={activeNavId} onItemClick={onNavChange} />
         </div>
 
         {/* Right: Actions (Theme Toggle & Đăng nhập button) */}
@@ -88,7 +89,10 @@ export default function Header({ className = '', activeNavId }: HeaderProps) {
           <NavMenu
             isMobile
             activeId={activeNavId}
-            onItemClick={() => setIsMobileMenuOpen(false)}
+            onItemClick={(id) => {
+              setIsMobileMenuOpen(false);
+              onNavChange?.(id);
+            }}
           />
 
           <div className="pt-2 border-t border-gray-200 dark:border-[#142330]">
