@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, Link, useNavigate } from 'react-router-dom';
-import { Sun, Moon, Shield, Bell, Menu } from 'lucide-react';
+import { Sun, Moon, Shield, Bell, Menu, LogOut } from 'lucide-react';
 import PTSidebar from './Sidebar/PTSidebar';
 import PTBottomNav from './BottomNav/PTBottomNav';
 import { useSettings } from '../../context/SettingsContext';
@@ -9,7 +9,7 @@ import logo from '../../assets/logo/logo-zenfit.png';
 
 export default function PTLayout() {
   const { theme, toggleTheme } = useSettings();
-  const { ptPlan, user, loginAsAdmin } = useApp();
+  const { ptPlan, user, loginAsAdmin, logoutApp } = useApp();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -114,9 +114,19 @@ export default function PTLayout() {
                 {(user?.name || 'PT').slice(0, 2).toUpperCase()}
               </div>
               <span className="hidden sm:inline-block text-xs font-semibold text-gray-800 dark:text-gray-200 max-w-[120px] truncate">
-                {user?.name || 'HLV Hoàng Quân'}
+                {user?.name || 'Huấn luyện viên'}
               </span>
             </Link>
+
+            {/* Nút Đăng xuất tiện lợi ngay trên thanh Header */}
+            <button
+              onClick={logoutApp}
+              title="Đăng xuất khỏi hệ thống"
+              className="h-9 px-3 rounded-xl flex items-center gap-1.5 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/50 text-xs font-semibold transition-colors cursor-pointer border border-rose-200/50 dark:border-rose-900/30"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Đăng xuất</span>
+            </button>
           </div>
         </header>
 

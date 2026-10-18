@@ -2,7 +2,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import AppRoutes from './routes/AppRoutes';
 import { SettingsProvider } from './context/SettingsContext';
-import { AuthProvider } from './features/auth/context/AuthContext';
+import { AuthProvider } from './context/AuthContext';
 import { AppProvider } from './context/AppContext';
 
 export default function App() {

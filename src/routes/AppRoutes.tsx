@@ -1,10 +1,11 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import LoginPage from '../features/auth/pages/LoginPage';
+import LoginPage from '../pages/LoginPage';
 import RegisterPage from '../features/auth/pages/RegisterPage';
 import ForgotPasswordPage from '../features/auth/pages/ForgotPasswordPage';
 import VerifyOtpPage from '../features/auth/pages/VerifyOtpPage';
-import OAuth2CallbackPage from '../features/auth/pages/OAuth2CallbackPage';
+import OAuth2SuccessPage from '../pages/OAuth2SuccessPage';
 import ForbiddenPage from '../pages/ForbiddenPage';
+import ProtectedRoute from './ProtectedRoute';
 
 import PTLayout from '../components/layout/PTLayout';
 import TodayPage from '../pages/pt/TodayPage';
@@ -25,62 +26,46 @@ import AdminFeePaymentsPage from '../pages/admin/AdminFeePaymentsPage';
 import AdminAuditLogsPage from '../pages/admin/AdminAuditLogsPage';
 import HomePage from '../pages/Home/HomePage';
 
-import { useApp } from '../context/AppContext';
+import { useAuth } from '../context/AuthContext';
 
 // Điều hướng thông minh tại trang gốc "/"
 function RootRedirect() {
-  const { role } = useApp();
-  if (!role) {
+  const { user, isAuthenticated } = useAuth();
+  if (!isAuthenticated || !user) {
     return <Navigate to="/login" replace />;
   }
-  if (role === 'ROLE_ADMIN') {
+  if (user.roles?.includes('ROLE_ADMIN')) {
     return <Navigate to="/admin/overview" replace />;
   }
   return <Navigate to="/pt/today" replace />;
 }
 
-// Bảo vệ route PT
-function PTRouteGuard({ children }: { children: React.ReactNode }) {
-  const { role } = useApp();
-  if (!role) {
-    return <Navigate to="/login" replace />;
-  }
-  return <>{children}</>;
-}
-
-// Bảo vệ route Admin: PT không thể vào, chỉ Admin mới có quyền
-function AdminRouteGuard({ children }: { children: React.ReactNode }) {
-  const { role } = useApp();
-  if (!role) {
-    return <Navigate to="/login" replace />;
-  }
-  if (role !== 'ROLE_ADMIN') {
-    return <Navigate to="/403" replace />;
-  }
-  return <>{children}</>;
-}
-
 export default function AppRoutes() {
   return (
     <Routes>
-      {/* Trang gốc tự động điều hướng sang Đăng nhập hoặc Dashboard tương ứng */}
-      <Route path="/" element={<HomePage/>} />
+      {/* Trang gốc */}
+      <Route path="/" element={<HomePage />} />
+
       {/* Xác thực tài khoản */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/verify-otp" element={<VerifyOtpPage />} />
-      <Route path="/oauth2/success" element={<OAuth2CallbackPage />} />
-      <Route path="/oauth2/callback" element={<OAuth2CallbackPage />} />
+      
+      {/* Google OAuth2 Callback Routes */}
+      <Route path="/oauth2/success" element={<OAuth2SuccessPage />} />
+      <Route path="/oauth2/callback" element={<OAuth2SuccessPage />} />
+      
+      {/* Trang 403 Forbidden */}
       <Route path="/403" element={<ForbiddenPage />} />
 
-      {/* Phân hệ PT Workspace (Có Sidebar desktop + Mobile bottom nav) */}
+      {/* Phân hệ PT Workspace (Yêu cầu đăng nhập tài khoản) */}
       <Route
         path="/pt"
         element={
-          <PTRouteGuard>
+          <ProtectedRoute>
             <PTLayout />
-          </PTRouteGuard>
+          </ProtectedRoute>
         }
       >
         <Route index element={<Navigate to="today" replace />} />
@@ -95,13 +80,13 @@ export default function AppRoutes() {
         <Route path="account" element={<MyAccountPage />} />
       </Route>
 
-      {/* Phân hệ Quản trị Admin (Cách ly hoàn toàn dữ liệu khách của PT) */}
+      {/* Phân hệ Quản trị Admin (Chỉ tài khoản có ROLE_ADMIN) */}
       <Route
         path="/admin"
         element={
-          <AdminRouteGuard>
+          <ProtectedRoute allowedRoles={['ROLE_ADMIN']}>
             <AdminLayout />
-          </AdminRouteGuard>
+          </ProtectedRoute>
         }
       >
         <Route index element={<Navigate to="overview" replace />} />
@@ -112,7 +97,7 @@ export default function AppRoutes() {
         <Route path="audit-logs" element={<AdminAuditLogsPage />} />
       </Route>
 
-      {/* Fallback 404 về trang chủ */}
+      {/* Fallback 404 về RootRedirect */}
       <Route path="*" element={<RootRedirect />} />
     </Routes>
   );

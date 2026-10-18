@@ -13,6 +13,8 @@ import {
 } from '../mock/mockData';
 import { toast } from 'sonner';
 
+import { useAuth } from './AuthContext';
+
 export type UserRole = 'ROLE_PT' | 'ROLE_ADMIN' | null;
 
 export interface AppUser {
@@ -34,7 +36,7 @@ interface AppContextType {
   auditLogs: AuditLog[];
   loginAsPT: () => void;
   loginAsAdmin: () => void;
-  logoutApp: () => void;
+  logoutApp: () => Promise<void> | void;
   checkInSession: (sessionId: string) => void;
   checkOutSession: (sessionId: string) => void;
   cancelSession: (sessionId: string, reason?: string) => void;
@@ -50,6 +52,8 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
+  const { user: authUser, logout: authLogout } = useAuth();
+
   // Quản lý vai trò (mặc định lấy từ localStorage hoặc khởi tạo 'ROLE_PT' nếu đã login)
   const [role, setRole] = useState<UserRole>(() => {
     const saved = localStorage.getItem('zenfit_role');
@@ -75,6 +79,28 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       title: 'Personal Trainer Freelance',
     };
   });
+
+  // Đồng bộ thông tin người dùng từ Backend Authentication vào AppContext
+  const authUserId = authUser?.id;
+  useEffect(() => {
+    if (authUser) {
+      const isAdmin = authUser.roles?.includes('ROLE_ADMIN');
+      const targetRole = isAdmin ? 'ROLE_ADMIN' : 'ROLE_PT';
+      setRole((prev) => (prev !== targetRole ? targetRole : prev));
+      setUser((prev) => {
+        if (prev?.id === authUser.id && prev?.name === (authUser.name || authUser.username)) {
+          return prev;
+        }
+        return {
+          id: authUser.id,
+          name: authUser.name || authUser.username,
+          email: authUser.email,
+          role: targetRole,
+          title: isAdmin ? 'Quản trị viên hệ thống' : 'Personal Trainer Freelance',
+        };
+      });
+    }
+  }, [authUser, authUserId]);
 
   const [clients, setClients] = useState<Client[]>(() => {
     const saved = localStorage.getItem('zenfit_clients');
@@ -131,10 +157,15 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     toast.success('Đăng nhập thành công với vai trò Quản Trị Viên (Admin)');
   };
 
-  const logoutApp = () => {
+  const logoutApp = async () => {
     setRole(null);
     setUser(null);
     localStorage.removeItem('zenfit_role');
+    try {
+      await authLogout();
+    } catch {
+      window.location.href = '/login';
+    }
     toast.info('Đã đăng xuất khỏi hệ thống');
   };
 

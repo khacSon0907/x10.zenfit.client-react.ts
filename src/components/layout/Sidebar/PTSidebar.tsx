@@ -109,18 +109,21 @@ export default function PTSidebar({ onCloseMobile }: PTSidebarProps) {
         <div className="flex items-center justify-between px-2">
           <div className="truncate">
             <p className="text-xs font-semibold text-gray-900 dark:text-white truncate">
-              {user?.name || 'HLV Hoàng Quân'}
+              {user?.name || 'Huấn luyện viên'}
             </p>
             <p className="text-[11px] text-gray-400 truncate">{user?.email}</p>
           </div>
-          <button
-            onClick={logoutApp}
-            title="Đăng xuất"
-            className="p-1.5 rounded-lg text-gray-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
-          >
-            <LogOut className="h-4 w-4" />
-          </button>
         </div>
+
+        {/* Nút Đăng xuất tài khoản nổi bật */}
+        <button
+          onClick={logoutApp}
+          title="Đăng xuất khỏi hệ thống"
+          className="w-full flex items-center justify-center gap-2 py-2 px-3 text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30 hover:bg-rose-100 dark:hover:bg-rose-900/40 rounded-xl transition-all cursor-pointer border border-rose-200/50 dark:border-rose-900/30"
+        >
+          <LogOut className="h-4 w-4" />
+          <span>Đăng xuất tài khoản</span>
+        </button>
 
         {/* Nút chuyển nhanh sang Admin để tiện test */}
         <button
