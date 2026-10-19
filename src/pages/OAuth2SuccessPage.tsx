@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '../context/AuthContext';
 import { getFriendlyErrorMessage } from '../shared/utils/authErrorHandler';
+import { isAdminUser } from '../shared/utils/roleUtils';
 import logo from '../assets/logo/logo-zenfit.png';
 
 /**
@@ -59,7 +60,7 @@ export default function OAuth2SuccessPage() {
         const targetPath =
           savedRedirect && savedRedirect !== '/' && savedRedirect !== '/login'
             ? savedRedirect
-            : user.roles?.includes('ROLE_ADMIN')
+            : isAdminUser(user)
               ? '/admin/overview'
               : '/pt/today';
 

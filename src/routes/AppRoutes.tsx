@@ -1,3 +1,4 @@
+import { type ReactNode } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from '../pages/LoginPage';
 import RegisterPage from '../features/auth/pages/RegisterPage';
@@ -27,30 +28,80 @@ import AdminAuditLogsPage from '../pages/admin/AdminAuditLogsPage';
 import HomePage from '../pages/Home/HomePage';
 
 import { useAuth } from '../context/AuthContext';
+import SplashLoader from '../shared/components/ui/SplashLoader';
+import { getDefaultRedirectRoute } from '../shared/utils/roleUtils';
 
-// Điều hướng thông minh tại trang gốc "/"
+// Điều hướng fallback cho các route không tồn tại (404 Fallback)
 function RootRedirect() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
+  if (isLoading) {
+    return <SplashLoader message="Đang kiểm tra quyền truy cập..." />;
+  }
   if (!isAuthenticated || !user) {
     return <Navigate to="/login" replace />;
   }
-  if (user.roles?.includes('ROLE_ADMIN')) {
-    return <Navigate to="/admin/overview" replace />;
+  return <Navigate to={getDefaultRedirectRoute(user)} replace />;
+}
+
+// Chặn truy cập vào các trang công khai (Home, Login, Register,...) nếu đã đăng nhập:
+// Tự động chuyển hướng thẳng vào trang làm việc tương ứng (Admin -> /admin/overview, PT -> /pt/today)
+function PublicAuthRoute({ children }: { children: ReactNode }) {
+  const { user, isAuthenticated, isLoading } = useAuth();
+  if (isLoading) {
+    return <SplashLoader message="Đang kiểm tra phiên đăng nhập..." />;
   }
-  return <Navigate to="/pt/today" replace />;
+  if (isAuthenticated && user) {
+    return <Navigate to={getDefaultRedirectRoute(user)} replace />;
+  }
+  return <>{children}</>;
 }
 
 export default function AppRoutes() {
   return (
     <Routes>
-      {/* Trang gốc */}
-      <Route path="/" element={<HomePage />} />
+      {/* Trang giới thiệu gốc: Nếu đã đăng nhập -> vào thẳng PT/Admin workspace; nếu chưa -> hiển thị HomePage */}
+      <Route
+        path="/"
+        element={
+          <PublicAuthRoute>
+            <HomePage />
+          </PublicAuthRoute>
+        }
+      />
 
       {/* Xác thực tài khoản */}
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
-      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-      <Route path="/verify-otp" element={<VerifyOtpPage />} />
+      <Route
+        path="/login"
+        element={
+          <PublicAuthRoute>
+            <LoginPage />
+          </PublicAuthRoute>
+        }
+      />
+      <Route
+        path="/register"
+        element={
+          <PublicAuthRoute>
+            <RegisterPage />
+          </PublicAuthRoute>
+        }
+      />
+      <Route
+        path="/forgot-password"
+        element={
+          <PublicAuthRoute>
+            <ForgotPasswordPage />
+          </PublicAuthRoute>
+        }
+      />
+      <Route
+        path="/verify-otp"
+        element={
+          <PublicAuthRoute>
+            <VerifyOtpPage />
+          </PublicAuthRoute>
+        }
+      />
       
       {/* Google OAuth2 Callback Routes */}
       <Route path="/oauth2/success" element={<OAuth2SuccessPage />} />
@@ -59,11 +110,11 @@ export default function AppRoutes() {
       {/* Trang 403 Forbidden */}
       <Route path="/403" element={<ForbiddenPage />} />
 
-      {/* Phân hệ PT Workspace (Yêu cầu đăng nhập tài khoản) */}
+      {/* Phân hệ PT Workspace: Dành cho USER / PT (Nếu Admin vào -> tự chuyển về /admin/overview) */}
       <Route
         path="/pt"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={['USER', 'PT', 'ROLE_USER', 'ROLE_PT']}>
             <PTLayout />
           </ProtectedRoute>
         }
@@ -80,11 +131,11 @@ export default function AppRoutes() {
         <Route path="account" element={<MyAccountPage />} />
       </Route>
 
-      {/* Phân hệ Quản trị Admin (Chỉ tài khoản có ROLE_ADMIN) */}
+      {/* Phân hệ Quản trị Admin: Yêu cầu quyền ADMIN (Nếu User/PT cố truy cập -> Chuyển về 403) */}
       <Route
         path="/admin"
         element={
-          <ProtectedRoute allowedRoles={['ROLE_ADMIN']}>
+          <ProtectedRoute allowedRoles={['ADMIN', 'ROLE_ADMIN']}>
             <AdminLayout />
           </ProtectedRoute>
         }

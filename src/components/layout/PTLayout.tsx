@@ -21,6 +21,7 @@ import UserProfileModal from '../../features/auth/components/UserProfileModal';
 import ChangePasswordModal from '../../features/auth/components/ChangePasswordModal';
 import logo from '../../assets/logo/logo-zenfit.png';
 import type { UserProfile } from '../../types/auth';
+import { isAdminUser } from '../../shared/utils/roleUtils';
 
 export default function PTLayout() {
   const { theme, toggleTheme } = useSettings();
@@ -226,18 +227,20 @@ export default function PTLayout() {
                       <span>Mật khẩu</span>
                     </button>
 
-                    {/* 3. Chuyển sang Admin (Tiện test) */}
-                    <button
-                      onClick={() => {
-                        setIsUserMenuOpen(false);
-                        loginAsAdmin();
-                        navigate('/admin/overview');
-                      }}
-                      className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-indigo-400 hover:bg-[#132238] transition-colors cursor-pointer text-left"
-                    >
-                      <Shield className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
-                      <span>Chuyển sang vai trò Admin</span>
-                    </button>
+                    {/* 3. Chuyển sang Admin (Dành cho tài khoản có quyền ADMIN) */}
+                    {isAdminUser(profileUserData) && (
+                      <button
+                        onClick={() => {
+                          setIsUserMenuOpen(false);
+                          loginAsAdmin();
+                          navigate('/admin/overview');
+                        }}
+                        className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-indigo-400 hover:bg-[#132238] transition-colors cursor-pointer text-left"
+                      >
+                        <Shield className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
+                        <span>Chuyển sang vai trò Admin</span>
+                      </button>
+                    )}
                   </div>
 
                   {/* Divider */}

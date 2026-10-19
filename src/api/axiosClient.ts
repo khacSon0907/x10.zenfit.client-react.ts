@@ -23,9 +23,19 @@ export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localho
 let memoryAccessToken: string | null = null;
 let memoryRefreshToken: string | null = null; // Tùy chọn fallback nếu cần
 
-export const getAccessToken = (): string | null => memoryAccessToken;
+export const getAccessToken = (): string | null => {
+  return memoryAccessToken || (typeof localStorage !== 'undefined' ? localStorage.getItem('zenfit_access_token') : null);
+};
+
 export const setAccessToken = (token: string | null): void => {
   memoryAccessToken = token;
+  if (typeof localStorage !== 'undefined') {
+    if (token) {
+      localStorage.setItem('zenfit_access_token', token);
+    } else {
+      localStorage.removeItem('zenfit_access_token');
+    }
+  }
 };
 
 export const getRefreshToken = (): string | null => memoryRefreshToken;
@@ -77,10 +87,10 @@ export const axiosClient: AxiosInstance = axios.create({
 // ============================================================================
 axiosClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // Nếu trong bộ nhớ RAM đang có accessToken -> gắn vào header Authorization
-    if (memoryAccessToken) {
+    const token = getAccessToken();
+    if (token) {
       config.headers = config.headers || {};
-      config.headers.Authorization = `Bearer ${memoryAccessToken}`;
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },

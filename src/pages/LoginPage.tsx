@@ -16,6 +16,7 @@ import logo from '../assets/logo/logo-zenfit.png';
 import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
 import { getFriendlyErrorMessage } from '../shared/utils/authErrorHandler';
+import { isAdminUser } from '../shared/utils/roleUtils';
 
 /**
  * ============================================================================
@@ -97,8 +98,8 @@ export default function LoginPage() {
         return;
       }
 
-      // Điều hướng trực tiếp vào màn hình thao tác của PT (hoặc Admin nếu là Quản trị viên)
-      if (user.roles?.includes('ROLE_ADMIN')) {
+      // Điều hướng trực tiếp theo vai trò: Admin -> /admin/overview, User/PT -> /pt/today
+      if (isAdminUser(user)) {
         navigate('/admin/overview', { replace: true });
       } else {
         navigate('/pt/today', { replace: true });

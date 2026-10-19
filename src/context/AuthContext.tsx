@@ -9,6 +9,7 @@ import {
 } from 'react';
 import authApi, { getGoogleOAuth2Url } from '../api/authApi';
 import {
+  getAccessToken,
   setAccessToken,
   setAuthInterceptorListeners,
 } from '../api/axiosClient';
@@ -27,6 +28,7 @@ import type {
   VerifyOtpReq,
 } from '../types/auth';
 import SplashLoader from '../shared/components/ui/SplashLoader';
+import { isAdminUser } from '../shared/utils/roleUtils';
 
 /**
  * Interface đầy đủ cho AuthContext
@@ -53,8 +55,17 @@ export interface AuthContextType extends AuthState {
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<UserProfile | null>(null);
-  const [accessToken, setAccessTokenState] = useState<string | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(() => {
+    try {
+      const saved = localStorage.getItem('zenfit_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [accessToken, setAccessTokenState] = useState<string | null>(() => {
+    return getAccessToken();
+  });
   const isOAuthCallback =
     typeof window !== 'undefined' &&
     (window.location.pathname.startsWith('/oauth2/success') ||
@@ -62,7 +73,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const [isLoading, setIsLoading] = useState<boolean>(() => !isOAuthCallback);
 
-  // Helper cập nhật auth state và gán token vào RAM
+  // Helper cập nhật auth state và gán token vào RAM & localStorage
   const handleAuthSuccess = useCallback((profile: UserProfile) => {
     const userWithFallbackName: UserProfile = {
       ...profile,
@@ -72,13 +83,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setAccessTokenState(profile.accessToken);
     setUser(userWithFallbackName);
 
-    // Đồng bộ role vào localStorage để tương thích với các view PT/Admin
-    if (profile.roles && profile.roles.length > 0) {
-      if (profile.roles.includes('ROLE_ADMIN')) {
-        localStorage.setItem('zenfit_role', 'ROLE_ADMIN');
-      } else if (profile.roles.includes('ROLE_PT')) {
-        localStorage.setItem('zenfit_role', 'ROLE_PT');
+    try {
+      localStorage.setItem('zenfit_user', JSON.stringify(userWithFallbackName));
+      if (profile.accessToken) {
+        localStorage.setItem('zenfit_access_token', profile.accessToken);
       }
+    } catch {
+      // Ignore quota errors
+    }
+
+    // Đồng bộ role vào localStorage để tương thích với các view PT/Admin
+    if (isAdminUser(profile)) {
+      localStorage.setItem('zenfit_role', 'ROLE_ADMIN');
+    } else {
+      localStorage.setItem('zenfit_role', 'ROLE_PT');
     }
 
     return userWithFallbackName;
@@ -89,6 +107,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setAccessToken(null);
     setAccessTokenState(null);
     setUser(null);
+    try {
+      localStorage.removeItem('zenfit_user');
+      localStorage.removeItem('zenfit_access_token');
+      localStorage.removeItem('zenfit_role');
+    } catch {
+      // Ignore
+    }
   }, []);
 
   /**
@@ -100,8 +125,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const response = await authApi.refreshToken();
       const profile = response.data;
       return handleAuthSuccess(profile);
-    } catch {
-      handleAuthCleanup();
+    } catch (err: unknown) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status === 401 || status === 403) {
+        handleAuthCleanup();
+      }
       return null;
     }
   }, [handleAuthSuccess, handleAuthCleanup]);
@@ -122,7 +150,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const hasInitializedRef = useRef(false);
 
   /**
-   * Khởi tạo App: Tự động refresh 1 lần lúc init để duy trì trạng thái đăng nhập khi F5
+   * Khởi tạo App: Tự động refresh 1 lần lúc init để duy trì trạng thái đăng nhập khi F5 / mở lại trình duyệt
    */
   useEffect(() => {
     // Nếu đang ở trang tiếp nhận mã callback OAuth2 thì bỏ qua refresh ban đầu
@@ -135,9 +163,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const bootstrapAuth = async () => {
       try {
-        await refreshSession();
+        const refreshedUser = await refreshSession();
+        // Nếu không refresh được qua cookie và trong localStorage cũng không có session
+        if (!refreshedUser) {
+          const savedToken = localStorage.getItem('zenfit_access_token');
+          const savedUser = localStorage.getItem('zenfit_user');
+          if (!savedToken && !savedUser) {
+            handleAuthCleanup();
+          }
+        }
       } catch {
-        handleAuthCleanup();
+        const savedToken = localStorage.getItem('zenfit_access_token');
+        const savedUser = localStorage.getItem('zenfit_user');
+        if (!savedToken && !savedUser) {
+          handleAuthCleanup();
+        }
       } finally {
         setIsLoading(false);
       }

@@ -6,6 +6,7 @@ import logo from '../../../assets/logo/logo-zenfit.png';
 import { useApp } from '../../../context/AppContext';
 import { useAuth } from '../hooks/useAuth';
 import { getGoogleOAuth2Url } from '../api/auth.api';
+import { isAdminUser } from '../../../shared/utils/roleUtils';
 
 export default function LoginForm() {
   const [rememberMe, setRememberMe] = useState<boolean>(() => {
@@ -41,17 +42,19 @@ export default function LoginForm() {
     }
 
     try {
+      let loggedUser = null;
       // Hỗ trợ đăng nhập API backend nếu có
       if (authLogin) {
         try {
-          await authLogin({ email, password });
+          loggedUser = await authLogin({ email, password });
         } catch {
           // Bỏ qua lỗi kết nối backend khi chạy demo offline/mock
         }
       }
 
-      // Điều hướng tương ứng với quyền người dùng
-      if (email.toLowerCase().includes('admin')) {
+      // Điều hướng chuẩn xác theo vai trò (ADMIN -> /admin/overview, USER/PT -> /pt/today)
+      const isRoleAdmin = isAdminUser(loggedUser) || email.toLowerCase().includes('admin');
+      if (isRoleAdmin) {
         loginAsAdmin();
         navigate('/admin/overview');
       } else {

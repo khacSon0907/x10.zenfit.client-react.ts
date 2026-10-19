@@ -14,6 +14,7 @@ import {
 import { toast } from 'sonner';
 
 import { useAuth } from './AuthContext';
+import { isAdminUser } from '../shared/utils/roleUtils';
 
 export type UserRole = 'ROLE_PT' | 'ROLE_ADMIN' | null;
 
@@ -84,7 +85,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const authUserId = authUser?.id;
   useEffect(() => {
     if (authUser) {
-      const isAdmin = authUser.roles?.includes('ROLE_ADMIN');
+      const isAdmin = isAdminUser(authUser);
       const targetRole = isAdmin ? 'ROLE_ADMIN' : 'ROLE_PT';
       setRole((prev) => (prev !== targetRole ? targetRole : prev));
       setUser((prev) => {
