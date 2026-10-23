@@ -6,6 +6,9 @@ interface SettingsContextValue {
   theme: Theme;
   setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
+  isSidebarCollapsed: boolean;
+  setIsSidebarCollapsed: (collapsed: boolean) => void;
+  toggleSidebarCollapse: () => void;
 }
 
 const SettingsContext = createContext<SettingsContextValue | null>(null);
@@ -15,6 +18,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     const saved = localStorage.getItem('theme');
     if (saved === 'light' || saved === 'dark') return saved;
     return 'dark';
+  });
+
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
+    return localStorage.getItem('zenfit_sidebar_collapsed') === 'true';
   });
 
   useEffect(() => {
@@ -27,8 +34,30 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
   };
 
+  const toggleSidebarCollapse = () => {
+    setIsSidebarCollapsed((prev) => {
+      const next = !prev;
+      localStorage.setItem('zenfit_sidebar_collapsed', String(next));
+      return next;
+    });
+  };
+
+  const handleSetSidebarCollapsed = (collapsed: boolean) => {
+    setIsSidebarCollapsed(collapsed);
+    localStorage.setItem('zenfit_sidebar_collapsed', String(collapsed));
+  };
+
   return (
-    <SettingsContext.Provider value={{ theme, setTheme, toggleTheme }}>
+    <SettingsContext.Provider
+      value={{
+        theme,
+        setTheme,
+        toggleTheme,
+        isSidebarCollapsed,
+        setIsSidebarCollapsed: handleSetSidebarCollapsed,
+        toggleSidebarCollapse,
+      }}
+    >
       {children}
     </SettingsContext.Provider>
   );

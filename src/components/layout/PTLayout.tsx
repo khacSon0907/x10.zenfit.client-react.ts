@@ -17,21 +17,27 @@ import PTBottomNav from './BottomNav/PTBottomNav';
 import { useSettings } from '../../context/SettingsContext';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
-import UserProfileModal from '../../features/auth/components/UserProfileModal';
 import ChangePasswordModal from '../../features/auth/components/ChangePasswordModal';
 import logo from '../../assets/logo/logo-zenfit.png';
 import type { UserProfile } from '../../types/auth';
-import { isAdminUser } from '../../shared/utils/roleUtils';
+import { getUserRoleLabel, isAdminUser } from '../../shared/utils/roleUtils';
+import Avatar from '../Avatar';
+import { useMe } from '../../hooks/useMe';
 
 export default function PTLayout() {
-  const { theme, toggleTheme } = useSettings();
+  const { theme, toggleTheme, isSidebarCollapsed, toggleSidebarCollapse } = useSettings();
   const { user, loginAsAdmin, logoutApp } = useApp();
   const { user: authUser } = useAuth();
+  const { data: meUser } = useMe();
   const navigate = useNavigate();
+
+  const currentDisplayName =
+    meUser?.username || authUser?.name || authUser?.username || user?.name || 'Huấn Luyện Viên';
+  const currentEmail = meUser?.email || authUser?.email || user?.email || 'pt@zenfit.vn';
+  const currentAvatarUrl = meUser?.avatarUrl || authUser?.avatarUrl || null;
 
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -53,27 +59,31 @@ export default function PTLayout() {
 
   // Fallback profile object for UserProfileModal
   const profileUserData: UserProfile = authUser || {
-    id: user?.id || 'pt-quantri',
-    username: 'quantri',
-    name: user?.name || 'Quản Trị',
-    email: user?.email || 'quantri@zenfit.vn',
-    roleIds: ['pt-role-1'],
-    roles: ['ROLE_PT'],
+    id: user?.id || 'pt-user',
+    username: 'user',
+    name: user?.name || 'Huấn Luyện Viên',
+    email: user?.email || 'pt@zenfit.vn',
+    roleIds: ['role-1'],
+    roles: [user?.role || 'ROLE_PT'],
     accessToken: '',
   };
 
+
   return (
-    <div className="min-h-screen bg-[#070e17] text-slate-100 font-poppins flex transition-colors">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#070e17] text-slate-800 dark:text-slate-100 font-poppins flex transition-colors duration-200">
       {/* Desktop Sidebar */}
-      <div className="hidden md:flex shrink-0 h-screen sticky top-0 z-40">
-        <PTSidebar />
+      <div className="hidden md:flex shrink-0 h-screen sticky top-0 z-40 transition-all duration-300">
+        <PTSidebar
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={toggleSidebarCollapse}
+        />
       </div>
 
       {/* Mobile Drawer Sidebar */}
       {isMobileSidebarOpen && (
         <div className="fixed inset-0 z-50 md:hidden flex">
           <div
-            className="fixed inset-0 bg-black/70 backdrop-blur-xs"
+            className="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-xs"
             onClick={() => setIsMobileSidebarOpen(false)}
           />
           <div className="relative w-72 max-w-[85vw] h-full z-10 animate-in slide-in-from-left duration-200">
@@ -85,13 +95,24 @@ export default function PTLayout() {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Topbar Header */}
-        <header className="h-18 bg-[#070e17]/95 backdrop-blur-md border-b border-[#162338] sticky top-0 z-30 px-4 sm:px-6 flex items-center justify-between transition-colors">
+        <header className="h-18 bg-white/90 dark:bg-[#070e17]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-[#162338] sticky top-0 z-30 px-4 sm:px-6 flex items-center justify-between transition-colors duration-200">
           <div className="flex items-center gap-3 flex-1 max-w-xl">
             {/* Mobile Menu Trigger */}
             <button
               onClick={() => setIsMobileSidebarOpen(true)}
-              className="md:hidden p-2 rounded-xl text-slate-300 hover:bg-[#111e30] transition-colors"
+              className="md:hidden p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#111e30] transition-colors cursor-pointer"
               aria-label="Mở menu"
+              title="Mở menu"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+
+            {/* Desktop Sidebar Toggle */}
+            <button
+              onClick={toggleSidebarCollapse}
+              className="hidden md:flex p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#111e30] transition-colors cursor-pointer"
+              title={isSidebarCollapsed ? 'Mở rộng thanh điều hướng' : 'Thu gọn thanh điều hướng'}
+              aria-label={isSidebarCollapsed ? 'Mở rộng thanh điều hướng' : 'Thu gọn thanh điều hướng'}
             >
               <Menu className="h-5 w-5" />
             </button>
@@ -99,21 +120,21 @@ export default function PTLayout() {
             {/* Mobile Logo Branding */}
             <div className="flex items-center gap-2 md:hidden">
               <img src={logo} alt="ZenFit" className="h-7 w-7 object-contain" />
-              <span className="font-bold text-white text-base">
+              <span className="font-bold text-slate-900 dark:text-white text-base">
                 Zen<span className="text-[#00d68f]">Fit</span>
               </span>
             </div>
 
-            {/* Search Input Bar (As in image: "Tìm kiếm học viên, lịch tập, tên gói tập...  Ctrl + K") */}
+            {/* Search Input Bar */}
             <div className="relative w-full hidden sm:block">
               <Search className="h-4 w-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 type="text"
                 placeholder="Tìm kiếm học viên, lịch tập, tên gói tập..."
-                className="w-full pl-10 pr-20 py-2.5 rounded-xl bg-[#0e1828] border border-[#1b2b42] text-xs text-white placeholder-slate-400 focus:outline-none focus:border-emerald-500/80 focus:ring-1 focus:ring-emerald-500/50 transition-all"
+                className="w-full pl-10 pr-20 py-2.5 rounded-xl bg-slate-100 dark:bg-[#0e1828] border border-slate-200 dark:border-[#1b2b42] text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-emerald-500/80 focus:ring-1 focus:ring-emerald-500/50 transition-all"
               />
               <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center">
-                <kbd className="text-[10px] font-mono bg-[#162438] text-slate-400 border border-slate-700/60 rounded px-1.5 py-0.5 shadow-xs">
+                <kbd className="text-[10px] font-mono bg-white dark:bg-[#162438] text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700/60 rounded px-1.5 py-0.5 shadow-xs">
                   Ctrl + K
                 </kbd>
               </div>
@@ -127,10 +148,10 @@ export default function PTLayout() {
               onClick={toggleTheme}
               aria-label={theme === 'light' ? 'Chế độ tối' : 'Chế độ sáng'}
               title={theme === 'light' ? 'Chế độ tối' : 'Chế độ sáng'}
-              className="h-9 w-9 rounded-xl flex items-center justify-center bg-[#0e1828] border border-[#1b2b42] text-slate-300 hover:text-white hover:bg-[#132238] transition-colors cursor-pointer"
+              className="h-9 w-9 rounded-xl flex items-center justify-center bg-slate-100 dark:bg-[#0e1828] border border-slate-200 dark:border-[#1b2b42] text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-[#132238] transition-colors cursor-pointer"
             >
               {theme === 'light' ? (
-                <Moon className="h-4 w-4 text-slate-300 hover:text-emerald-400 transition-colors" />
+                <Moon className="h-4 w-4 text-slate-600 hover:text-emerald-500 transition-colors" />
               ) : (
                 <Sun className="h-4 w-4 text-amber-400 hover:text-amber-300 transition-colors" />
               )}
@@ -138,65 +159,74 @@ export default function PTLayout() {
 
             {/* Notification Bell */}
             <button
-              className="h-9 w-9 rounded-xl flex items-center justify-center bg-[#0e1828] border border-[#1b2b42] text-slate-300 hover:text-white hover:bg-[#132238] transition-colors relative cursor-pointer"
+              className="h-9 w-9 rounded-xl flex items-center justify-center bg-slate-100 dark:bg-[#0e1828] border border-slate-200 dark:border-[#1b2b42] text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-[#132238] transition-colors relative cursor-pointer"
               title="Thông báo hệ thống"
             >
               <Bell className="h-4 w-4" />
-              <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-[#070e17]" />
+              <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white dark:ring-[#070e17]" />
             </button>
 
             {/* User Profile Container & Dropdown Trigger */}
             <div className="relative" ref={userMenuRef}>
               <button
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                className="flex items-center gap-3 p-1 sm:px-2 sm:py-1.5 rounded-xl hover:bg-[#0e1828] border border-transparent hover:border-[#1b2b42] transition-all cursor-pointer select-none"
+                className="flex items-center gap-3 p-1 sm:px-2 sm:py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-[#0e1828] border border-transparent hover:border-slate-200 dark:hover:border-[#1b2b42] transition-all cursor-pointer select-none"
               >
                 {/* Coach Avatar */}
                 <div className="relative">
-                  <img
-                    src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80"
-                    alt="Quản Trị"
-                    className="h-9 w-9 rounded-full object-cover ring-2 ring-emerald-500/40"
+                  <Avatar
+                    src={currentAvatarUrl}
+                    name={currentDisplayName}
+                    size="md"
+                    showCameraBadge={false}
                   />
-                  <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-[#070e17]" />
+                  <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-[#070e17]" />
                 </div>
 
-                {/* Name & Title (Matching Image) */}
+                {/* Name & Title */}
                 <div className="hidden sm:block text-left">
-                  <div className="text-xs font-bold text-white leading-tight">
-                    {user?.name || 'Quản Trị'}
+                  <div className="text-xs font-bold text-slate-900 dark:text-white leading-tight">
+                    {currentDisplayName}
                   </div>
-                  <div className="text-[11px] text-slate-400 font-medium leading-tight mt-0.5">
-                    PT (Huấn luyện viên)
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium leading-tight mt-0.5">
+                    {getUserRoleLabel(authUser || user)}
                   </div>
                 </div>
 
                 <ChevronDown
                   className={`h-3.5 w-3.5 text-slate-400 transition-transform duration-200 hidden sm:block ${
-                    isUserMenuOpen ? 'rotate-180 text-emerald-400' : ''
+                    isUserMenuOpen ? 'rotate-180 text-emerald-500' : ''
                   }`}
                 />
               </button>
 
               {/* User Dropdown Menu */}
               {isUserMenuOpen && (
-                <div className="absolute right-0 top-full mt-2 w-64 rounded-2xl bg-[#0c1626] border border-[#1b2b42] shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150 backdrop-blur-xl">
+                <div className="absolute right-0 top-full mt-2 w-64 rounded-2xl bg-white dark:bg-[#0c1626] border border-slate-200 dark:border-[#1b2b42] shadow-xl dark:shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150 backdrop-blur-xl">
                   {/* User Header Summary */}
-                  <div className="p-3 pb-3 border-b border-[#1b2b42]/80 flex items-center gap-3">
-                    <img
-                      src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80"
-                      alt="Quản Trị"
-                      className="h-10 w-10 rounded-full object-cover ring-2 ring-emerald-500/50"
+                  <div
+                    onClick={() => {
+                      setIsUserMenuOpen(false);
+                      navigate('/pt/profile');
+                    }}
+                    className="p-3 pb-3 border-b border-slate-100 dark:border-[#1b2b42]/80 flex items-center gap-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-[#0e1828] rounded-xl transition-colors"
+                    title="Xem trang cá nhân"
+                  >
+                    <Avatar
+                      src={currentAvatarUrl}
+                      name={currentDisplayName}
+                      size="md"
+                      showCameraBadge={false}
                     />
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-bold text-white truncate">
-                        {user?.name || 'Quản Trị'}
+                      <p className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                        {currentDisplayName}
                       </p>
-                      <p className="text-xs text-slate-400 truncate">
-                        {user?.email || 'quantri@zenfit.vn'}
+                      <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                        {currentEmail}
                       </p>
-                      <span className="inline-block mt-1 px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-[10px] font-semibold text-emerald-400">
-                        PT (Huấn luyện viên)
+                      <span className="inline-block mt-1 px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
+                        {getUserRoleLabel(authUser || user)}
                       </span>
                     </div>
                   </div>
@@ -207,11 +237,11 @@ export default function PTLayout() {
                     <button
                       onClick={() => {
                         setIsUserMenuOpen(false);
-                        setIsProfileModalOpen(true);
+                        navigate('/pt/profile');
                       }}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-200 hover:text-white hover:bg-[#132238] transition-colors cursor-pointer text-left"
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#132238] transition-colors cursor-pointer text-left"
                     >
-                      <User className="h-4 w-4 text-emerald-400 shrink-0" />
+                      <User className="h-4 w-4 text-emerald-500 shrink-0" />
                       <span>Thông tin cá nhân</span>
                     </button>
 
@@ -221,9 +251,9 @@ export default function PTLayout() {
                         setIsUserMenuOpen(false);
                         setIsPasswordModalOpen(true);
                       }}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-200 hover:text-white hover:bg-[#132238] transition-colors cursor-pointer text-left"
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#132238] transition-colors cursor-pointer text-left"
                     >
-                      <KeyRound className="h-4 w-4 text-amber-400 shrink-0" />
+                      <KeyRound className="h-4 w-4 text-amber-500 shrink-0" />
                       <span>Mật khẩu</span>
                     </button>
 
@@ -235,16 +265,16 @@ export default function PTLayout() {
                           loginAsAdmin();
                           navigate('/admin/overview');
                         }}
-                        className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-indigo-400 hover:bg-[#132238] transition-colors cursor-pointer text-left"
+                        className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-[#132238] transition-colors cursor-pointer text-left"
                       >
-                        <Shield className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
+                        <Shield className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
                         <span>Chuyển sang vai trò Admin</span>
                       </button>
                     )}
                   </div>
 
                   {/* Divider */}
-                  <div className="border-t border-[#1b2b42]/80 my-1" />
+                  <div className="border-t border-slate-100 dark:border-[#1b2b42]/80 my-1" />
 
                   {/* 4. Đăng xuất */}
                   <button
@@ -252,7 +282,7 @@ export default function PTLayout() {
                       setIsUserMenuOpen(false);
                       logoutApp();
                     }}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 transition-colors cursor-pointer text-left"
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-600 dark:hover:text-rose-300 transition-colors cursor-pointer text-left"
                   >
                     <LogOut className="h-4 w-4 shrink-0" />
                     <span>Đăng xuất</span>
@@ -268,13 +298,6 @@ export default function PTLayout() {
           <Outlet />
         </main>
       </div>
-
-      {/* User Profile Modal */}
-      <UserProfileModal
-        user={profileUserData}
-        isOpen={isProfileModalOpen}
-        onClose={() => setIsProfileModalOpen(false)}
-      />
 
       {/* Change Password Modal */}
       <ChangePasswordModal

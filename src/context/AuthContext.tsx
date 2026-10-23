@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from 'react';
 import authApi, { getGoogleOAuth2Url } from '../api/authApi';
+import { getMe } from '../api/userApi';
 import {
   getAccessToken,
   setAccessToken,
@@ -96,7 +97,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (isAdminUser(profile)) {
       localStorage.setItem('zenfit_role', 'ROLE_ADMIN');
     } else {
-      localStorage.setItem('zenfit_role', 'ROLE_PT');
+      const primaryRole = profile.roles?.[0]
+        ? (profile.roles[0].startsWith('ROLE_') ? profile.roles[0] : `ROLE_${profile.roles[0]}`)
+        : 'ROLE_PT';
+      localStorage.setItem('zenfit_role', primaryRole);
     }
 
     return userWithFallbackName;
@@ -145,6 +149,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       },
     });
   }, [handleAuthSuccess, handleAuthCleanup]);
+
+  // Tự động gọi GET /api/user/me khi có accessToken để đồng bộ thông tin mới nhất và avatarUrl
+  useEffect(() => {
+    if (!accessToken) return;
+
+    let isMounted = true;
+    getMe()
+      .then((meData) => {
+        if (!isMounted) return;
+        setUser((prev) => {
+          if (!prev) return prev;
+          const updated: UserProfile = {
+            ...prev,
+            ...meData,
+            name: meData.username || prev.name,
+            avatarUrl: meData.avatarUrl,
+            roles: prev.roles,
+            accessToken: prev.accessToken,
+          };
+          try {
+            localStorage.setItem('zenfit_user', JSON.stringify(updated));
+          } catch {
+            // ignore
+          }
+          return updated;
+        });
+      })
+      .catch(() => {
+        // Lỗi sẽ do interceptor hoặc route guard xử lý nếu token hết hạn
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [accessToken]);
 
   // Cờ chặn React Strict Mode chạy 2 lần trong môi trường Development
   const hasInitializedRef = useRef(false);

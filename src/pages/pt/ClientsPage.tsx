@@ -1,9 +1,13 @@
+import { useState } from 'react';
 import { Plus, Search } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import StatusBadge from '../../components/common/StatusBadge';
+import CreateClientModal from '../../components/CreateClientModal';
+import { FITNESS_GOAL_LABELS } from '../../types/client.types';
 
 export default function ClientsPage() {
-  const { clients } = useApp();
+  const { clients, addClient } = useApp();
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -17,7 +21,8 @@ export default function ClientsPage() {
           </p>
         </div>
         <button
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-xs cursor-pointer"
+          onClick={() => setIsModalOpen(true)}
+          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-xl text-xs font-semibold shadow-xs transition-all cursor-pointer"
         >
           <Plus className="h-4 w-4" />
           <span>Thêm khách mới</span>
@@ -56,6 +61,25 @@ export default function ClientsPage() {
           ))}
         </div>
       </div>
+
+      {/* Modal Tạo Hồ Sơ Khách Hàng */}
+      <CreateClientModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={(newClient) => {
+          addClient({
+            fullName: newClient.fullName,
+            phone: newClient.phone,
+            gender: (newClient.gender?.toLowerCase() as 'male' | 'female' | 'other') || 'male',
+            goal: newClient.fitnessGoal ? FITNESS_GOAL_LABELS[newClient.fitnessGoal] : 'Tập luyện cải thiện thể lực',
+            preferredTimeSlot: '18:00 - 19:00',
+            consentGiven: true,
+            status: 'active',
+            attendanceLevel: 'regular',
+            notes: newClient.notes,
+          });
+        }}
+      />
     </div>
   );
 }

@@ -14,15 +14,21 @@ import {
 import { toast } from 'sonner';
 
 import { useAuth } from './AuthContext';
-import { isAdminUser } from '../shared/utils/roleUtils';
+import { getUserRoleLabel, isAdminUser } from '../shared/utils/roleUtils';
 
-export type UserRole = 'ROLE_PT' | 'ROLE_ADMIN' | null;
+export type UserRole =
+  | 'ROLE_PT'
+  | 'ROLE_ADMIN'
+  | 'ROLE_HEAD_OF_TRAINING'
+  | 'ROLE_TEAM_MANAGER'
+  | string
+  | null;
 
 export interface AppUser {
   id: string;
   name: string;
   email: string;
-  role: 'ROLE_PT' | 'ROLE_ADMIN';
+  role: string;
   avatar?: string;
   title?: string;
 }
@@ -86,7 +92,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (authUser) {
       const isAdmin = isAdminUser(authUser);
-      const targetRole = isAdmin ? 'ROLE_ADMIN' : 'ROLE_PT';
+      const rawRole = authUser.roles?.[0]
+        ? (authUser.roles[0].startsWith('ROLE_') ? authUser.roles[0] : `ROLE_${authUser.roles[0]}`)
+        : (isAdmin ? 'ROLE_ADMIN' : 'ROLE_PT');
+      const targetRole = isAdmin ? 'ROLE_ADMIN' : rawRole;
       setRole((prev) => (prev !== targetRole ? targetRole : prev));
       setUser((prev) => {
         if (prev?.id === authUser.id && prev?.name === (authUser.name || authUser.username)) {
@@ -97,9 +106,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           name: authUser.name || authUser.username,
           email: authUser.email,
           role: targetRole,
-          title: isAdmin ? 'Quản trị viên hệ thống' : 'Personal Trainer Freelance',
+          title: getUserRoleLabel(authUser),
         };
       });
+
     }
   }, [authUser, authUserId]);
 

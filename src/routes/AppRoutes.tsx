@@ -11,6 +11,7 @@ import ProtectedRoute from './ProtectedRoute';
 import PTLayout from '../components/layout/PTLayout';
 import TodayPage from '../pages/pt/TodayPage';
 import ClientsPage from '../pages/pt/ClientsPage';
+import CreateClientPage from '../pages/pt/CreateClientPage';
 import SchedulePage from '../pages/pt/SchedulePage';
 import TrialsRenewalsPage from '../pages/pt/TrialsRenewalsPage';
 import PackagesPaymentsPage from '../pages/pt/PackagesPaymentsPage';
@@ -18,6 +19,7 @@ import ProgressPage from '../pages/pt/ProgressPage';
 import PlansPage from '../pages/pt/PlansPage';
 import RevenuePage from '../pages/pt/RevenuePage';
 import MyAccountPage from '../pages/pt/MyAccountPage';
+import ProfilePage from '../pages/ProfilePage';
 
 import AdminLayout from '../components/layout/AdminLayout';
 import AdminOverviewPage from '../pages/admin/AdminOverviewPage';
@@ -29,7 +31,7 @@ import HomePage from '../pages/Home/HomePage';
 
 import { useAuth } from '../context/AuthContext';
 import SplashLoader from '../shared/components/ui/SplashLoader';
-import { getDefaultRedirectRoute } from '../shared/utils/roleUtils';
+import { getDefaultRedirectRoute, PT_WORKSPACE_ROLES } from '../shared/utils/roleUtils';
 
 // Điều hướng fallback cho các route không tồn tại (404 Fallback)
 function RootRedirect() {
@@ -110,11 +112,23 @@ export default function AppRoutes() {
       {/* Trang 403 Forbidden */}
       <Route path="/403" element={<ForbiddenPage />} />
 
-      {/* Phân hệ PT Workspace: Dành cho USER / PT (Nếu Admin vào -> tự chuyển về /admin/overview) */}
+      {/* Trang Profile người dùng: Yêu cầu đăng nhập */}
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <PTLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<ProfilePage />} />
+      </Route>
+
+      {/* Phân hệ PT Workspace: Dành cho tất cả vai trò không phải ADMIN (PT, HEAD_OF_TRAINING, TEAM_MANAGER, USER) */}
       <Route
         path="/pt"
         element={
-          <ProtectedRoute allowedRoles={['USER', 'PT', 'ROLE_USER', 'ROLE_PT']}>
+          <ProtectedRoute allowedRoles={PT_WORKSPACE_ROLES}>
             <PTLayout />
           </ProtectedRoute>
         }
@@ -122,6 +136,7 @@ export default function AppRoutes() {
         <Route index element={<Navigate to="today" replace />} />
         <Route path="today" element={<TodayPage />} />
         <Route path="clients" element={<ClientsPage />} />
+        <Route path="clients/new" element={<CreateClientPage />} />
         <Route path="schedule" element={<SchedulePage />} />
         <Route path="renewals" element={<TrialsRenewalsPage />} />
         <Route path="packages" element={<PackagesPaymentsPage />} />
@@ -129,6 +144,7 @@ export default function AppRoutes() {
         <Route path="plans" element={<PlansPage />} />
         <Route path="revenue" element={<RevenuePage />} />
         <Route path="account" element={<MyAccountPage />} />
+        <Route path="profile" element={<ProfilePage />} />
       </Route>
 
       {/* Phân hệ Quản trị Admin: Yêu cầu quyền ADMIN (Nếu User/PT cố truy cập -> Chuyển về 403) */}

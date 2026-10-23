@@ -37,7 +37,15 @@ export default function ProtectedRoute({ allowedRoles, children }: ProtectedRout
 
   // 3. Kiểm tra quyền hạn theo danh sách Role được chỉ định
   if (allowedRoles && allowedRoles.length > 0) {
-    const userRolesNormalized = (user.roles || []).map((r) =>
+    const rawRoles: string[] = [];
+    if (Array.isArray(user.roles)) rawRoles.push(...user.roles);
+    if ((user as { role?: string }).role) rawRoles.push((user as { role?: string }).role!);
+    if (rawRoles.length === 0 && typeof localStorage !== 'undefined') {
+      const savedRole = localStorage.getItem('zenfit_role');
+      if (savedRole) rawRoles.push(savedRole);
+    }
+
+    const userRolesNormalized = rawRoles.map((r) =>
       String(r).toUpperCase().replace(/^ROLE_/, '')
     );
     const allowedRolesNormalized = allowedRoles.map((r) =>

@@ -20,9 +20,12 @@ export interface ApiResponse<T> {
   timestamp?: string;
 }
 
+export type UserStatus = 'ACTIVE' | 'INACTIVE' | 'BANNED';
+export type ProviderType = 'LOCAL' | 'GOOGLE';
+
 /**
  * Cấu trúc UserProfile chuẩn từ Backend
- * Backend trả về trong data của LoginResponse sau khi đăng nhập / đổi mã OAuth2 / refresh token thành công.
+ * Backend trả về trong data của LoginResponse sau khi đăng nhập / đổi mã OAuth2 / refresh token / GET /api/user/me.
  * Lưu ý: refreshToken trong DTO Backend gắn @JsonIgnore, được lưu trong HTTP-only Cookie.
  */
 export interface UserProfile {
@@ -30,6 +33,20 @@ export interface UserProfile {
   username: string;
   email: string;
   roleIds: string[];
+  phoneNumber?: string | null;
+  status?: UserStatus;
+  createdAt?: string;
+  updatedAt?: string;
+  emailVerified?: boolean;
+  verifiedAt?: string | null;
+  avatarUrl?: string | null;
+  birthday?: string | null;
+  birthdayUpdateCount?: number;
+  points?: number;
+  birthdayLastUpdatedAt?: string | null;
+  nextBirthdayUpdateAt?: string | null;
+  canUpdateBirthday?: boolean;
+  providerType?: ProviderType;
   roles: string[];
   accessToken: string;
   name?: string; // Tùy chọn hiển thị tên thân thiện cho UI (fallback = username)

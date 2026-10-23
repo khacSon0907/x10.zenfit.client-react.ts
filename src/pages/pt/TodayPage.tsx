@@ -180,14 +180,14 @@ export default function TodayPage() {
   const maxVal = 12;
 
   return (
-    <div className="space-y-6 select-none">
+    <div className="space-y-6 select-none transition-colors duration-200">
       {/* 1. Header Greeting & Action Bar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white flex items-center gap-2">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
             Chào buổi tối, <span className="text-[#00d68f]">Quản Trị</span> 👋
           </h1>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1">
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
             Tiếp tục hành trình giúp học viên đạt được phiên bản tốt hơn của chính họ!
           </p>
         </div>
@@ -196,7 +196,7 @@ export default function TodayPage() {
           {/* Date Picker Button */}
           <button
             onClick={() => toast.info('Bộ chọn ngày: Thứ 6, 17/10/2025')}
-            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-[#0e1828] border border-[#1b2b42] text-xs font-medium text-slate-200 hover:text-white hover:bg-[#132238] transition-colors cursor-pointer shadow-xs"
+            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-white dark:bg-[#0e1828] border border-slate-200 dark:border-[#1b2b42] text-xs font-medium text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-[#132238] transition-colors cursor-pointer shadow-xs"
           >
             <Calendar className="h-4 w-4 text-slate-400" />
             <span>Thứ 6, 17/10/2025</span>
@@ -219,18 +219,18 @@ export default function TodayPage() {
         {/* Card 1: Lịch hôm nay */}
         <Link
           to="/pt/schedule"
-          className="p-5 rounded-2xl bg-[#0c1626] border border-[#17263c] hover:border-emerald-500/40 transition-all group"
+          className="p-5 rounded-2xl bg-white dark:bg-[#0c1626] border border-slate-200/90 dark:border-[#17263c] hover:border-emerald-500/50 dark:hover:border-emerald-500/40 shadow-xs transition-all group"
         >
           <div className="flex items-start justify-between">
-            <div className="h-10 w-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+            <div className="h-10 w-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 dark:text-emerald-400">
               <Calendar className="h-5 w-5" />
             </div>
-            <ChevronRight className="h-4 w-4 text-slate-500 group-hover:text-emerald-400 group-hover:translate-x-0.5 transition-all" />
+            <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-emerald-500 dark:group-hover:text-emerald-400 group-hover:translate-x-0.5 transition-all" />
           </div>
           <div className="mt-4">
-            <div className="text-xs font-medium text-slate-400">Lịch hôm nay</div>
-            <div className="text-2xl sm:text-3xl font-extrabold text-white mt-1">4</div>
-            <div className="text-[11px] text-slate-400 mt-2 truncate">
+            <div className="text-xs font-medium text-slate-500 dark:text-slate-400">Lịch hôm nay</div>
+            <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white mt-1">4</div>
+            <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-2 truncate">
               2 đã hoàn thành • 1 sắp tới • 1 vắng
             </div>
           </div>
@@ -239,18 +239,18 @@ export default function TodayPage() {
         {/* Card 2: Học viên đang huấn luyện */}
         <Link
           to="/pt/clients"
-          className="p-5 rounded-2xl bg-[#0c1626] border border-[#17263c] hover:border-emerald-500/40 transition-all group"
+          className="p-5 rounded-2xl bg-white dark:bg-[#0c1626] border border-slate-200/90 dark:border-[#17263c] hover:border-emerald-500/50 dark:hover:border-emerald-500/40 shadow-xs transition-all group"
         >
           <div className="flex items-start justify-between">
-            <div className="h-10 w-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+            <div className="h-10 w-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 dark:text-emerald-400">
               <Users className="h-5 w-5" />
             </div>
-            <ChevronRight className="h-4 w-4 text-slate-500 group-hover:text-emerald-400 group-hover:translate-x-0.5 transition-all" />
+            <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-emerald-500 dark:group-hover:text-emerald-400 group-hover:translate-x-0.5 transition-all" />
           </div>
           <div className="mt-4">
-            <div className="text-xs font-medium text-slate-400">Học viên đang huấn luyện</div>
-            <div className="text-2xl sm:text-3xl font-extrabold text-white mt-1">12</div>
-            <div className="text-[11px] text-emerald-400 mt-2 flex items-center gap-1 font-semibold">
+            <div className="text-xs font-medium text-slate-500 dark:text-slate-400">Học viên đang huấn luyện</div>
+            <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white mt-1">12</div>
+            <div className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-2 flex items-center gap-1 font-semibold">
               <span>↗ 2 so với tuần trước</span>
             </div>
           </div>
@@ -259,18 +259,18 @@ export default function TodayPage() {
         {/* Card 3: Doanh thu tháng */}
         <Link
           to="/pt/revenue"
-          className="p-5 rounded-2xl bg-[#0c1626] border border-[#17263c] hover:border-emerald-500/40 transition-all group"
+          className="p-5 rounded-2xl bg-white dark:bg-[#0c1626] border border-slate-200/90 dark:border-[#17263c] hover:border-emerald-500/50 dark:hover:border-emerald-500/40 shadow-xs transition-all group"
         >
           <div className="flex items-start justify-between">
-            <div className="h-10 w-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+            <div className="h-10 w-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 dark:text-emerald-400">
               <CircleDollarSign className="h-5 w-5" />
             </div>
-            <ChevronRight className="h-4 w-4 text-slate-500 group-hover:text-emerald-400 group-hover:translate-x-0.5 transition-all" />
+            <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-emerald-500 dark:group-hover:text-emerald-400 group-hover:translate-x-0.5 transition-all" />
           </div>
           <div className="mt-4">
-            <div className="text-xs font-medium text-slate-400">Doanh thu tháng</div>
-            <div className="text-2xl sm:text-3xl font-extrabold text-white mt-1">18.000.000đ</div>
-            <div className="text-[11px] text-emerald-400 mt-2 flex items-center gap-1 font-semibold">
+            <div className="text-xs font-medium text-slate-500 dark:text-slate-400">Doanh thu tháng</div>
+            <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white mt-1">18.000.000đ</div>
+            <div className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-2 flex items-center gap-1 font-semibold">
               <span>+12% so với tháng trước</span>
             </div>
           </div>
@@ -279,18 +279,18 @@ export default function TodayPage() {
         {/* Card 4: Cần theo dõi */}
         <Link
           to="/pt/renewals"
-          className="p-5 rounded-2xl bg-[#0c1626] border border-[#17263c] hover:border-rose-500/40 transition-all group"
+          className="p-5 rounded-2xl bg-white dark:bg-[#0c1626] border border-slate-200/90 dark:border-[#17263c] hover:border-rose-500/50 dark:hover:border-rose-500/40 shadow-xs transition-all group"
         >
           <div className="flex items-start justify-between">
-            <div className="h-10 w-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
+            <div className="h-10 w-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-500 dark:text-rose-400">
               <Bell className="h-5 w-5" />
             </div>
-            <ChevronRight className="h-4 w-4 text-slate-500 group-hover:text-rose-400 group-hover:translate-x-0.5 transition-all" />
+            <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-rose-500 dark:group-hover:text-rose-400 group-hover:translate-x-0.5 transition-all" />
           </div>
           <div className="mt-4">
-            <div className="text-xs font-medium text-slate-400">Cần theo dõi</div>
-            <div className="text-2xl sm:text-3xl font-extrabold text-white mt-1">3</div>
-            <div className="text-[11px] text-slate-400 mt-2 truncate">
+            <div className="text-xs font-medium text-slate-500 dark:text-slate-400">Cần theo dõi</div>
+            <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white mt-1">3</div>
+            <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-2 truncate">
               1 gói sắp hết hạn • 2 công nợ
             </div>
           </div>
@@ -302,20 +302,20 @@ export default function TodayPage() {
         {/* Left Column (7 cols): Lịch tập hôm nay & Hoạt động gần đây */}
         <div className="lg:col-span-7 space-y-6">
           {/* Card: Lịch tập hôm nay */}
-          <div className="p-5 sm:p-6 rounded-2xl bg-[#0c1626] border border-[#17263c] space-y-4">
+          <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-[#0c1626] border border-slate-200/90 dark:border-[#17263c] shadow-xs space-y-4">
             <div className="flex items-center justify-between pb-1">
               <div className="flex items-center gap-2.5">
-                <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400">
+                <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-500 dark:text-emerald-400">
                   <Calendar className="h-4 w-4" />
                 </div>
-                <h2 className="text-base font-bold text-white">Lịch tập hôm nay</h2>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#132238] text-slate-300 border border-[#1b2b42]">
+                <h2 className="text-base font-bold text-slate-900 dark:text-white">Lịch tập hôm nay</h2>
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-[#132238] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#1b2b42]">
                   4 buổi
                 </span>
               </div>
               <Link
                 to="/pt/schedule"
-                className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 transition-colors"
+                className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 flex items-center gap-1 transition-colors"
               >
                 <span>Xem tất cả</span>
                 <ArrowRight className="h-3.5 w-3.5" />
@@ -327,7 +327,7 @@ export default function TodayPage() {
               {sessions.map((session) => (
                 <div
                   key={session.id}
-                  className={`p-4 rounded-xl bg-[#09111e] border border-[#162338] flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all hover:border-[#1e3250] ${
+                  className={`p-4 rounded-xl bg-slate-50 dark:bg-[#09111e] border border-slate-200 dark:border-[#162338] flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all hover:border-slate-300 dark:hover:border-[#1e3250] ${
                     session.accentColor === 'emerald'
                       ? 'border-l-4 border-l-emerald-500'
                       : session.accentColor === 'amber'
@@ -337,9 +337,9 @@ export default function TodayPage() {
                 >
                   <div className="flex items-center gap-3.5 min-w-0">
                     {/* Time slot column */}
-                    <div className="text-xs font-bold text-white shrink-0 w-20 leading-tight">
+                    <div className="text-xs font-bold text-slate-900 dark:text-white shrink-0 w-20 leading-tight">
                       <div>{session.timeSlot.split('-')[0].trim()}</div>
-                      <div className="text-slate-400 font-medium">
+                      <div className="text-slate-500 dark:text-slate-400 font-medium">
                         - {session.timeSlot.split('-')[1]?.trim()}
                       </div>
                     </div>
@@ -348,22 +348,22 @@ export default function TodayPage() {
                     <img
                       src={session.avatar}
                       alt={session.clientName}
-                      className="h-10 w-10 rounded-full object-cover shrink-0 ring-2 ring-[#17263c]"
+                      className="h-10 w-10 rounded-full object-cover shrink-0 ring-2 ring-slate-200 dark:ring-[#17263c]"
                     />
 
                     {/* Student Info & Tags */}
                     <div className="min-w-0">
-                      <h3 className="text-sm font-bold text-white truncate">
+                      <h3 className="text-sm font-bold text-slate-900 dark:text-white truncate">
                         {session.clientName}
                       </h3>
-                      <p className="text-[11px] text-slate-400 truncate mt-0.5">
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
                         {session.packageInfo}
                       </p>
                       <div className="flex items-center gap-1.5 mt-1.5">
                         {session.tags.map((tag) => (
                           <span
                             key={tag}
-                            className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-[#132238] text-slate-300 border border-[#1a2d47]"
+                            className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-slate-200/70 dark:bg-[#132238] text-slate-700 dark:text-slate-300 border border-slate-300/80 dark:border-[#1a2d47]"
                           >
                             {tag}
                           </span>
@@ -375,7 +375,7 @@ export default function TodayPage() {
                   {/* Right side: Status badge & Actions */}
                   <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
                     {session.status === 'completed' && (
-                      <span className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-950/70 text-emerald-400 border border-emerald-800/60 flex items-center gap-1">
+                      <span className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60 flex items-center gap-1">
                         <Check className="h-3 w-3 stroke-[2.5]" />
                         <span>Hoàn thành</span>
                       </span>
@@ -383,7 +383,7 @@ export default function TodayPage() {
 
                     {session.status === 'upcoming' && (
                       <>
-                        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-amber-950/70 text-amber-400 border border-amber-800/60 flex items-center gap-1">
+                        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 dark:bg-amber-950/70 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/60 flex items-center gap-1">
                           <Clock className="h-3 w-3" />
                           <span>Sắp tới</span>
                         </span>
@@ -398,7 +398,7 @@ export default function TodayPage() {
                     )}
 
                     {session.status === 'absent' && (
-                      <span className="px-3 py-1 rounded-full text-xs font-semibold bg-rose-950/70 text-rose-400 border border-rose-800/60 flex items-center gap-1">
+                      <span className="px-3 py-1 rounded-full text-xs font-semibold bg-rose-50 dark:bg-rose-950/70 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800/60 flex items-center gap-1">
                         <X className="h-3 w-3 stroke-[2.5]" />
                         <span>Vắng</span>
                       </span>
@@ -406,7 +406,7 @@ export default function TodayPage() {
 
                     <button
                       onClick={() => setSelectedSession(session)}
-                      className="px-3 py-1.5 rounded-lg border border-[#1b2b42] hover:bg-[#132238] text-slate-300 hover:text-white text-xs font-medium transition-colors cursor-pointer"
+                      className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-[#1b2b42] hover:bg-slate-100 dark:hover:bg-[#132238] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-xs font-medium transition-colors cursor-pointer"
                     >
                       Xem chi tiết
                     </button>
@@ -417,17 +417,17 @@ export default function TodayPage() {
           </div>
 
           {/* Card: Hoạt động gần đây */}
-          <div className="p-5 sm:p-6 rounded-2xl bg-[#0c1626] border border-[#17263c] space-y-4">
+          <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-[#0c1626] border border-slate-200/90 dark:border-[#17263c] shadow-xs space-y-4">
             <div className="flex items-center justify-between pb-1">
               <div className="flex items-center gap-2.5">
-                <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400">
+                <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-500 dark:text-emerald-400">
                   <Clock className="h-4 w-4" />
                 </div>
-                <h2 className="text-base font-bold text-white">Hoạt động gần đây</h2>
+                <h2 className="text-base font-bold text-slate-900 dark:text-white">Hoạt động gần đây</h2>
               </div>
               <Link
                 to="/pt/schedule"
-                className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 transition-colors"
+                className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 flex items-center gap-1 transition-colors"
               >
                 <span>Xem tất cả</span>
                 <ArrowRight className="h-3.5 w-3.5" />
@@ -440,21 +440,21 @@ export default function TodayPage() {
                 return (
                   <div
                     key={act.id}
-                    className="p-3 rounded-xl bg-[#09111e] border border-[#152338] flex items-center justify-between gap-3 hover:bg-[#0c1728] transition-colors"
+                    className="p-3 rounded-xl bg-slate-50 dark:bg-[#09111e] border border-slate-200 dark:border-[#152338] flex items-center justify-between gap-3 hover:bg-slate-100/80 dark:hover:bg-[#0c1728] transition-colors"
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="h-7 w-7 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0">
+                      <div className="h-7 w-7 rounded-lg bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 flex items-center justify-center shrink-0">
                         <IconComp className="h-3.5 w-3.5" />
                       </div>
-                      <span className="text-xs font-semibold text-slate-400 shrink-0">
+                      <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 shrink-0">
                         {act.time}
                       </span>
                       <img
                         src={act.avatar}
                         alt="User"
-                        className="h-6 w-6 rounded-full object-cover shrink-0 ring-1 ring-[#1b2b42]"
+                        className="h-6 w-6 rounded-full object-cover shrink-0 ring-1 ring-slate-200 dark:ring-[#1b2b42]"
                       />
-                      <span className="text-xs text-slate-200 font-medium truncate">
+                      <span className="text-xs text-slate-800 dark:text-slate-200 font-medium truncate">
                         {act.text}
                       </span>
                     </div>
@@ -463,17 +463,17 @@ export default function TodayPage() {
                       <span
                         className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${
                           act.badgeType === 'success'
-                            ? 'bg-emerald-950/70 text-emerald-400 border border-emerald-800/50'
+                            ? 'bg-emerald-50 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50'
                             : act.badgeType === 'emerald'
-                            ? 'bg-teal-950/70 text-teal-400 border border-teal-800/50'
+                            ? 'bg-teal-50 dark:bg-teal-950/70 text-teal-600 dark:text-teal-400 border border-teal-200 dark:border-teal-800/50'
                             : act.badgeType === 'info'
-                            ? 'bg-sky-950/70 text-sky-400 border border-sky-800/50'
-                            : 'bg-amber-950/70 text-amber-400 border border-amber-800/50'
+                            ? 'bg-sky-50 dark:bg-sky-950/70 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-800/50'
+                            : 'bg-amber-50 dark:bg-amber-950/70 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50'
                         }`}
                       >
                         {act.badge}
                       </span>
-                      <ChevronRight className="h-3.5 w-3.5 text-slate-500" />
+                      <ChevronRight className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
                     </div>
                   </div>
                 );
@@ -485,17 +485,17 @@ export default function TodayPage() {
         {/* Right Column (5 cols): Cần xử lý & Tình hình điểm danh tuần */}
         <div className="lg:col-span-5 space-y-6">
           {/* Card: Cần xử lý */}
-          <div className="p-5 sm:p-6 rounded-2xl bg-[#0c1626] border border-[#17263c] space-y-5">
+          <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-[#0c1626] border border-slate-200/90 dark:border-[#17263c] shadow-xs space-y-5">
             <div className="flex items-center justify-between pb-1">
               <div className="flex items-center gap-2.5">
-                <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-400">
+                <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-500 dark:text-amber-400">
                   <AlertTriangle className="h-4 w-4" />
                 </div>
-                <h2 className="text-base font-bold text-white">Cần xử lý</h2>
+                <h2 className="text-base font-bold text-slate-900 dark:text-white">Cần xử lý</h2>
               </div>
               <Link
                 to="/pt/renewals"
-                className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 transition-colors"
+                className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 flex items-center gap-1 transition-colors"
               >
                 <span>Xem tất cả</span>
                 <ArrowRight className="h-3.5 w-3.5" />
@@ -503,21 +503,21 @@ export default function TodayPage() {
             </div>
 
             {/* Sub-section 1: Công nợ cần thu */}
-            <div className="p-4 rounded-xl bg-[#09111e] border border-[#162338] space-y-3">
+            <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#09111e] border border-slate-200 dark:border-[#162338] space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="h-6 w-6 rounded-md bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+                  <div className="h-6 w-6 rounded-md bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 flex items-center justify-center">
                     <CircleDollarSign className="h-3.5 w-3.5" />
                   </div>
-                  <span className="text-xs font-bold text-white">Công nợ cần thu</span>
+                  <span className="text-xs font-bold text-slate-900 dark:text-white">Công nợ cần thu</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-extrabold text-rose-400">4.500.000đ</span>
-                  <span className="text-[11px] text-slate-400">3 học viên</span>
+                  <span className="text-xs font-extrabold text-rose-500 dark:text-rose-400">4.500.000đ</span>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400">3 học viên</span>
                 </div>
               </div>
 
-              <div className="divide-y divide-[#162338] pt-1">
+              <div className="divide-y divide-slate-200 dark:divide-[#162338] pt-1">
                 {debts.map((debt) => (
                   <div
                     key={debt.name}
@@ -525,15 +525,15 @@ export default function TodayPage() {
                   >
                     <div className="flex items-center gap-2">
                       <Users className="h-3.5 w-3.5 text-slate-400" />
-                      <span className="font-semibold text-slate-200">{debt.name}</span>
+                      <span className="font-semibold text-slate-700 dark:text-slate-200">{debt.name}</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="font-bold text-slate-300">{debt.amount}</span>
+                      <span className="font-bold text-slate-700 dark:text-slate-300">{debt.amount}</span>
                       <button
                         onClick={() =>
                           toast.success(`Đã gửi thông báo nhắc học phí đến ${debt.name}!`)
                         }
-                        className="text-emerald-400 hover:text-emerald-300 font-semibold flex items-center gap-0.5 cursor-pointer"
+                        className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 font-semibold flex items-center gap-0.5 cursor-pointer"
                       >
                         <span>Nhắc nhở</span>
                         <ArrowRight className="h-3 w-3" />
@@ -545,24 +545,24 @@ export default function TodayPage() {
             </div>
 
             {/* Sub-section 2: Gói tập sắp hết hạn */}
-            <div className="p-4 rounded-xl bg-[#09111e] border border-[#162338] space-y-3">
+            <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#09111e] border border-slate-200 dark:border-[#162338] space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="h-6 w-6 rounded-md bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+                  <div className="h-6 w-6 rounded-md bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 flex items-center justify-center">
                     <Clock className="h-3.5 w-3.5" />
                   </div>
-                  <span className="text-xs font-bold text-white">Gói tập sắp hết hạn</span>
+                  <span className="text-xs font-bold text-slate-900 dark:text-white">Gói tập sắp hết hạn</span>
                 </div>
                 <Link
                   to="/pt/renewals"
-                  className="text-[11px] font-semibold text-slate-400 hover:text-emerald-400 flex items-center gap-0.5"
+                  className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 hover:text-emerald-500 dark:hover:text-emerald-400 flex items-center gap-0.5"
                 >
                   <span>2 gói</span>
                   <ChevronRight className="h-3 w-3" />
                 </Link>
               </div>
 
-              <div className="divide-y divide-[#162338] pt-1">
+              <div className="divide-y divide-slate-200 dark:divide-[#162338] pt-1">
                 {expiringPackages.map((pkg) => (
                   <div
                     key={pkg.name}
@@ -570,15 +570,15 @@ export default function TodayPage() {
                   >
                     <div className="flex items-center gap-2">
                       <Clock className="h-3.5 w-3.5 text-slate-400" />
-                      <span className="font-semibold text-slate-200">{pkg.name}</span>
+                      <span className="font-semibold text-slate-700 dark:text-slate-200">{pkg.name}</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-slate-400">{pkg.remaining}</span>
+                      <span className="text-slate-500 dark:text-slate-400">{pkg.remaining}</span>
                       <button
                         onClick={() =>
                           toast.success(`Đã gửi ưu đãi gia hạn gói đến ${pkg.name}!`)
                         }
-                        className="text-emerald-400 hover:text-emerald-300 font-semibold flex items-center gap-0.5 cursor-pointer"
+                        className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 font-semibold flex items-center gap-0.5 cursor-pointer"
                       >
                         <span>Gia hạn</span>
                         <ArrowRight className="h-3 w-3" />
@@ -591,15 +591,15 @@ export default function TodayPage() {
           </div>
 
           {/* Card: Tình hình điểm danh tuần */}
-          <div className="p-5 sm:p-6 rounded-2xl bg-[#0c1626] border border-[#17263c] space-y-4">
+          <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-[#0c1626] border border-slate-200/90 dark:border-[#17263c] shadow-xs space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400">
+                <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-500 dark:text-emerald-400">
                   <TrendingUp className="h-4 w-4" />
                 </div>
-                <h2 className="text-base font-bold text-white">Tình hình điểm danh tuần</h2>
+                <h2 className="text-base font-bold text-slate-900 dark:text-white">Tình hình điểm danh tuần</h2>
               </div>
-              <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-[#132238] text-slate-300 border border-[#1b2b42]">
+              <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-slate-100 dark:bg-[#132238] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#1b2b42]">
                 T7
               </span>
             </div>
@@ -608,17 +608,17 @@ export default function TodayPage() {
             <div className="pt-4">
               <div className="h-44 flex items-end justify-between gap-2 px-2 relative">
                 {/* Horizontal guide lines */}
-                <div className="absolute inset-x-0 top-0 border-b border-slate-800/40" />
-                <div className="absolute inset-x-0 top-1/4 border-b border-slate-800/40" />
-                <div className="absolute inset-x-0 top-2/4 border-b border-slate-800/40" />
-                <div className="absolute inset-x-0 top-3/4 border-b border-slate-800/40" />
+                <div className="absolute inset-x-0 top-0 border-b border-slate-100 dark:border-slate-800/40" />
+                <div className="absolute inset-x-0 top-1/4 border-b border-slate-100 dark:border-slate-800/40" />
+                <div className="absolute inset-x-0 top-2/4 border-b border-slate-100 dark:border-slate-800/40" />
+                <div className="absolute inset-x-0 top-3/4 border-b border-slate-100 dark:border-slate-800/40" />
 
                 {/* Y-Axis Label */}
-                <div className="absolute left-0 top-0 text-[10px] text-slate-500 font-mono">12</div>
-                <div className="absolute left-0 top-1/4 text-[10px] text-slate-500 font-mono">9</div>
-                <div className="absolute left-0 top-2/4 text-[10px] text-slate-500 font-mono">6</div>
-                <div className="absolute left-0 top-3/4 text-[10px] text-slate-500 font-mono">3</div>
-                <div className="absolute left-0 bottom-0 text-[10px] text-slate-500 font-mono">0</div>
+                <div className="absolute left-0 top-0 text-[10px] text-slate-400 dark:text-slate-500 font-mono">12</div>
+                <div className="absolute left-0 top-1/4 text-[10px] text-slate-400 dark:text-slate-500 font-mono">9</div>
+                <div className="absolute left-0 top-2/4 text-[10px] text-slate-400 dark:text-slate-500 font-mono">6</div>
+                <div className="absolute left-0 top-3/4 text-[10px] text-slate-400 dark:text-slate-500 font-mono">3</div>
+                <div className="absolute left-0 bottom-0 text-[10px] text-slate-400 dark:text-slate-500 font-mono">0</div>
 
                 {/* Bars */}
                 {attendanceData.map((item) => {
@@ -629,7 +629,7 @@ export default function TodayPage() {
                       className="flex-1 flex flex-col items-center h-full justify-end group z-10"
                     >
                       {/* Bar Value Tooltip */}
-                      <span className="text-[10px] font-bold text-slate-300 mb-1 group-hover:text-emerald-400 transition-colors">
+                      <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300 mb-1 group-hover:text-emerald-500 dark:group-hover:text-emerald-400 transition-colors">
                         {item.count}
                       </span>
 
@@ -641,7 +641,7 @@ export default function TodayPage() {
                             item.count > 0
                               ? item.isCurrent
                                 ? 'bg-gradient-to-t from-emerald-600 to-emerald-400 shadow-lg shadow-emerald-500/30'
-                                : 'bg-gradient-to-t from-emerald-800/80 to-emerald-500/80 group-hover:to-emerald-400'
+                                : 'bg-gradient-to-t from-emerald-500/60 to-emerald-400/80 dark:from-emerald-800/80 dark:to-emerald-500/80 group-hover:to-emerald-400'
                               : 'bg-transparent'
                           }`}
                         />
@@ -651,12 +651,12 @@ export default function TodayPage() {
                       <div className="mt-2 text-center">
                         <span
                           className={`text-xs font-bold block ${
-                            item.isCurrent ? 'text-emerald-400' : 'text-slate-300'
+                            item.isCurrent ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-300'
                           }`}
                         >
                           {item.day}
                         </span>
-                        <span className="text-[9px] text-slate-500 block">{item.date}</span>
+                        <span className="text-[9px] text-slate-400 dark:text-slate-500 block">{item.date}</span>
                       </div>
                     </div>
                   );
@@ -664,13 +664,13 @@ export default function TodayPage() {
               </div>
 
               {/* Chart Legend */}
-              <div className="mt-5 pt-3 border-t border-[#162338] flex items-center justify-center gap-6 text-xs text-slate-400">
+              <div className="mt-5 pt-3 border-t border-slate-200 dark:border-[#162338] flex items-center justify-center gap-6 text-xs text-slate-600 dark:text-slate-400">
                 <div className="flex items-center gap-2">
                   <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
                   <span>Có mặt</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="h-2.5 w-2.5 rounded-full bg-slate-700" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-slate-300 dark:bg-slate-700" />
                   <span>Vắng</span>
                 </div>
               </div>
@@ -681,25 +681,25 @@ export default function TodayPage() {
 
       {/* Modal: Tạo lịch tập */}
       {isCreateModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in">
-          <div className="relative w-full max-w-md bg-[#0c1626] rounded-2xl p-6 border border-[#1b2b42] shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 dark:bg-black/70 backdrop-blur-xs p-4 animate-in fade-in">
+          <div className="relative w-full max-w-md bg-white dark:bg-[#0c1626] rounded-2xl p-6 border border-slate-200 dark:border-[#1b2b42] shadow-2xl space-y-4">
             <button
               onClick={() => setIsCreateModalOpen(false)}
-              className="absolute top-5 right-5 text-slate-400 hover:text-white cursor-pointer"
+              className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
             >
               <X className="h-5 w-5" />
             </button>
 
             <div>
-              <h3 className="text-lg font-bold text-white">Tạo lịch tập mới</h3>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Tạo lịch tập mới</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                 Đặt lịch tập và phân bổ khung giờ cho học viên của bạn.
               </p>
             </div>
 
             <form onSubmit={handleCreateSession} className="space-y-3.5">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   Tên học viên
                 </label>
                 <input
@@ -707,20 +707,20 @@ export default function TodayPage() {
                   value={newClientName}
                   onChange={(e) => setNewClientName(e.target.value)}
                   placeholder="Ví dụ: Hoàng Tuấn Kiệt"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#09111e] border border-[#17263c] text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#09111e] border border-slate-200 dark:border-[#17263c] text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-emerald-500"
                   required
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     Khung giờ
                   </label>
                   <select
                     value={newTimeSlot}
                     onChange={(e) => setNewTimeSlot(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl bg-[#09111e] border border-[#17263c] text-xs text-white focus:outline-none focus:border-emerald-500"
+                    className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-[#09111e] border border-slate-200 dark:border-[#17263c] text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500"
                   >
                     <option value="06:00 - 07:00">06:00 - 07:00</option>
                     <option value="08:30 - 09:30">08:30 - 09:30</option>
@@ -731,13 +731,13 @@ export default function TodayPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     Mục tiêu tập
                   </label>
                   <select
                     value={newGoal}
                     onChange={(e) => setNewGoal(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl bg-[#09111e] border border-[#17263c] text-xs text-white focus:outline-none focus:border-emerald-500"
+                    className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-[#09111e] border border-slate-200 dark:border-[#17263c] text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500"
                   >
                     <option value="Tăng cơ">Tăng cơ</option>
                     <option value="Giảm mỡ">Giảm mỡ</option>
@@ -751,7 +751,7 @@ export default function TodayPage() {
                 <button
                   type="button"
                   onClick={() => setIsCreateModalOpen(false)}
-                  className="w-1/2 py-2.5 rounded-xl border border-[#17263c] text-xs font-semibold text-slate-300 hover:bg-[#132238] transition-colors cursor-pointer"
+                  className="w-1/2 py-2.5 rounded-xl border border-slate-200 dark:border-[#17263c] text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#132238] transition-colors cursor-pointer"
                 >
                   Hủy
                 </button>
@@ -769,43 +769,43 @@ export default function TodayPage() {
 
       {/* Modal: Xem chi tiết buổi tập */}
       {selectedSession && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in">
-          <div className="relative w-full max-w-md bg-[#0c1626] rounded-2xl p-6 border border-[#1b2b42] shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 dark:bg-black/70 backdrop-blur-xs p-4 animate-in fade-in">
+          <div className="relative w-full max-w-md bg-white dark:bg-[#0c1626] rounded-2xl p-6 border border-slate-200 dark:border-[#1b2b42] shadow-2xl space-y-4">
             <button
               onClick={() => setSelectedSession(null)}
-              className="absolute top-5 right-5 text-slate-400 hover:text-white cursor-pointer"
+              className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
             >
               <X className="h-5 w-5" />
             </button>
 
-            <div className="flex items-center gap-3 pb-3 border-b border-[#162338]">
+            <div className="flex items-center gap-3 pb-3 border-b border-slate-200 dark:border-[#162338]">
               <img
                 src={selectedSession.avatar}
                 alt={selectedSession.clientName}
                 className="h-12 w-12 rounded-full object-cover ring-2 ring-emerald-500/40"
               />
               <div>
-                <h3 className="text-base font-bold text-white">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">
                   {selectedSession.clientName}
                 </h3>
-                <p className="text-xs text-slate-400">{selectedSession.packageInfo}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{selectedSession.packageInfo}</p>
               </div>
             </div>
 
             <div className="space-y-3 text-xs">
-              <div className="flex justify-between py-1.5 border-b border-[#162338]/60">
-                <span className="text-slate-400">Khung giờ:</span>
-                <span className="font-bold text-white">{selectedSession.timeSlot}</span>
+              <div className="flex justify-between py-1.5 border-b border-slate-100 dark:border-[#162338]/60">
+                <span className="text-slate-500 dark:text-slate-400">Khung giờ:</span>
+                <span className="font-bold text-slate-900 dark:text-white">{selectedSession.timeSlot}</span>
               </div>
-              <div className="flex justify-between py-1.5 border-b border-[#162338]/60">
-                <span className="text-slate-400">Trạng thái:</span>
+              <div className="flex justify-between py-1.5 border-b border-slate-100 dark:border-[#162338]/60">
+                <span className="text-slate-500 dark:text-slate-400">Trạng thái:</span>
                 <span
                   className={`font-semibold ${
                     selectedSession.status === 'completed'
-                      ? 'text-emerald-400'
+                      ? 'text-emerald-600 dark:text-emerald-400'
                       : selectedSession.status === 'upcoming'
-                      ? 'text-amber-400'
-                      : 'text-rose-400'
+                      ? 'text-amber-600 dark:text-amber-400'
+                      : 'text-rose-600 dark:text-rose-400'
                   }`}
                 >
                   {selectedSession.status === 'completed'
@@ -815,13 +815,13 @@ export default function TodayPage() {
                     : 'Vắng'}
                 </span>
               </div>
-              <div className="flex justify-between py-1.5 border-b border-[#162338]/60">
-                <span className="text-slate-400">Thẻ phân loại:</span>
+              <div className="flex justify-between py-1.5 border-b border-slate-100 dark:border-[#162338]/60">
+                <span className="text-slate-500 dark:text-slate-400">Thẻ phân loại:</span>
                 <div className="flex gap-1.5">
                   {selectedSession.tags.map((t) => (
                     <span
                       key={t}
-                      className="px-2 py-0.5 rounded bg-[#132238] text-slate-300 font-medium"
+                      className="px-2 py-0.5 rounded bg-slate-100 dark:bg-[#132238] text-slate-700 dark:text-slate-300 font-medium border border-slate-200 dark:border-transparent"
                     >
                       {t}
                     </span>
@@ -829,8 +829,8 @@ export default function TodayPage() {
                 </div>
               </div>
               <div className="py-1.5">
-                <span className="text-slate-400 block mb-1">Ghi chú giáo án:</span>
-                <p className="p-3 rounded-xl bg-[#09111e] text-slate-300 border border-[#162338] italic">
+                <span className="text-slate-500 dark:text-slate-400 block mb-1">Ghi chú giáo án:</span>
+                <p className="p-3 rounded-xl bg-slate-50 dark:bg-[#09111e] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#162338] italic">
                   Khởi động khớp vai, tập bài Bench Press 4 hiệp x 10 rep, Incline Dumbbell Press 3 hiệp. Theo dõi nhịp tim ổn định.
                 </p>
               </div>
