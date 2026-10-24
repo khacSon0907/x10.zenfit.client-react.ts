@@ -213,18 +213,8 @@ export default function CreateClientPage() {
 
       const newClient = await clientApi.createClient(payload);
 
-      // Cập nhật state cục bộ qua AppContext
-      addClient({
-        fullName: newClient.fullName,
-        phone: newClient.phone,
-        gender: (newClient.gender?.toLowerCase() as 'male' | 'female' | 'other') || 'male',
-        goal: newClient.fitnessGoal ? FITNESS_GOAL_LABELS[newClient.fitnessGoal] : 'Tập luyện cải thiện thể lực',
-        preferredTimeSlot: '18:00 - 19:00',
-        consentGiven: true,
-        status: 'active',
-        attendanceLevel: 'regular',
-        notes: newClient.notes,
-      });
+      // Cập nhật state qua AppContext
+      await addClient(newClient);
 
       toast.success('Tạo hồ sơ khách hàng thành công!');
       navigate('/pt/clients');

@@ -58,6 +58,8 @@ export interface ClientResponse extends CreateClientRequest {
   remainingSessions?: number;
 }
 
+export type Client = ClientResponse;
+
 /**
  * Metadata & nhãn tiếng Việt phục vụ UI
  */

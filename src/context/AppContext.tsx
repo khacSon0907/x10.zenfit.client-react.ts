@@ -1,11 +1,9 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import {
-  MOCK_CLIENTS,
   MOCK_TODAY_SESSIONS,
   INITIAL_PT_PLAN,
   MOCK_ADMIN_PTS,
   MOCK_AUDIT_LOGS,
-  type Client,
   type WorkoutSession,
   type PTPlan,
   type AdminPTUser,
@@ -15,6 +13,13 @@ import { toast } from 'sonner';
 
 import { useAuth } from './AuthContext';
 import { getUserRoleLabel, isAdminUser } from '../shared/utils/roleUtils';
+import { clientApi } from '../api/clientApi';
+import type {
+  ClientResponse,
+  CreateClientRequest,
+  ClientStatus,
+  Client,
+} from '../types/client.types';
 
 export type UserRole =
   | 'ROLE_PT'
@@ -36,7 +41,9 @@ export interface AppUser {
 interface AppContextType {
   role: UserRole;
   user: AppUser | null;
-  clients: Client[];
+  clients: ClientResponse[];
+  isLoadingClients: boolean;
+  clientsError: string | null;
   todaySessions: WorkoutSession[];
   ptPlan: PTPlan;
   adminPTs: AdminPTUser[];
@@ -48,10 +55,13 @@ interface AppContextType {
   checkOutSession: (sessionId: string) => void;
   cancelSession: (sessionId: string, reason?: string) => void;
   markAbsentSession: (sessionId: string) => void;
-  addClient: (clientData: Omit<Client, 'id' | 'joinedDate'>) => boolean;
-  updateClientStatus: (clientId: string, status: Client['status']) => void;
-  updateRenewalStatus: (clientId: string, renewalStatus: Client['renewalStatus']) => void;
-  updateTrialStatus: (clientId: string, trialStatus: Client['trialStatus']) => void;
+  fetchClients: (trainerId?: string) => Promise<ClientResponse[]>;
+  addClient: (clientData: ClientResponse | CreateClientRequest) => Promise<boolean> | boolean;
+  updateClient: (id: string, clientData: Partial<CreateClientRequest>) => Promise<boolean>;
+  deleteClient: (id: string) => Promise<boolean>;
+  updateClientStatus: (clientId: string, status: ClientStatus) => Promise<void>;
+  updateRenewalStatus: (clientId: string, renewalStatus: string) => void;
+  updateTrialStatus: (clientId: string, trialStatus: string) => void;
   toggleAdminPTStatus: (ptId: string) => void;
   extendPTPlan: (ptId: string, days: number, reason: string) => void;
 }
@@ -109,14 +119,15 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           title: getUserRoleLabel(authUser),
         };
       });
-
     }
   }, [authUser, authUserId]);
 
-  const [clients, setClients] = useState<Client[]>(() => {
-    const saved = localStorage.getItem('zenfit_clients');
-    return saved ? JSON.parse(saved) : MOCK_CLIENTS;
-  });
+  // ============================================================================
+  // CLIENTS QUẢN LÝ TỪ API THẬT (/api/clients) - ĐÃ BỎ MOCK DATA
+  // ============================================================================
+  const [clients, setClients] = useState<ClientResponse[]>([]);
+  const [isLoadingClients, setIsLoadingClients] = useState<boolean>(false);
+  const [clientsError, setClientsError] = useState<string | null>(null);
 
   const [todaySessions, setTodaySessions] = useState<WorkoutSession[]>(() => {
     const saved = localStorage.getItem('zenfit_sessions');
@@ -127,7 +138,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [adminPTs, setAdminPTs] = useState<AdminPTUser[]>(MOCK_ADMIN_PTS);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>(MOCK_AUDIT_LOGS);
 
-  // Lưu state vào localStorage khi có thay đổi
+  // Lưu role vào localStorage khi có thay đổi
   useEffect(() => {
     if (role) {
       localStorage.setItem('zenfit_role', role);
@@ -137,12 +148,41 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   }, [role]);
 
   useEffect(() => {
-    localStorage.setItem('zenfit_clients', JSON.stringify(clients));
-  }, [clients]);
-
-  useEffect(() => {
     localStorage.setItem('zenfit_sessions', JSON.stringify(todaySessions));
   }, [todaySessions]);
+
+  /**
+   * Gọi API thật lấy danh sách khách hàng từ Backend
+   */
+  const fetchClients = useCallback(async (trainerId?: string): Promise<ClientResponse[]> => {
+    setIsLoadingClients(true);
+    setClientsError(null);
+    try {
+      const data = await clientApi.getAllClients(trainerId);
+      const list = Array.isArray(data) ? data : [];
+      setClients(list);
+      return list;
+    } catch (err: unknown) {
+      let msg = 'Không thể tải danh sách khách hàng từ máy chủ';
+      if (err && typeof err === 'object' && 'response' in err) {
+        const axiosErr = err as { response?: { data?: { message?: string } } };
+        if (axiosErr.response?.data?.message) {
+          msg = axiosErr.response.data.message;
+        }
+      }
+      setClientsError(msg);
+      return [];
+    } finally {
+      setIsLoadingClients(false);
+    }
+  }, []);
+
+  // Tự động tải danh sách khách hàng khi người dùng đã đăng nhập
+  useEffect(() => {
+    if (authUser) {
+      fetchClients();
+    }
+  }, [authUser, fetchClients]);
 
   const loginAsPT = () => {
     setRole('ROLE_PT');
@@ -223,23 +263,14 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       })
     );
 
-    // 2. Trừ trực tiếp 1 buổi vào gói tập của khách hàng tương ứng
+    // 2. Trừ trực tiếp 1 buổi vào gói tập của khách hàng tương ứng trong state
     setClients((prev) =>
       prev.map((c) => {
-        if (c.id === targetSession.clientId && c.currentPackage) {
-          const newRemaining = Math.max(0, c.currentPackage.remainingSessions - 1);
-          const newCompleted = c.currentPackage.completedSessions + 1;
-          const isExpiring = newRemaining <= 3 && newRemaining > 0;
-          const isDone = newRemaining === 0;
-
+        if (c.id === targetSession.clientId) {
+          const currentRemaining = c.remainingSessions ?? 0;
           return {
             ...c,
-            currentPackage: {
-              ...c.currentPackage,
-              remainingSessions: newRemaining,
-              completedSessions: newCompleted,
-              status: isDone ? 'completed' : isExpiring ? 'expiring_soon' : c.currentPackage.status,
-            },
+            remainingSessions: Math.max(0, currentRemaining - 1),
           };
         }
         return c;
@@ -285,51 +316,127 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     toast.warning('Đã đánh dấu khách vắng mặt.');
   };
 
-  // THÊM KHÁCH HÀNG (CÓ CHẶN HẠN MỨC GÓI)
-  const addClient = (clientData: Omit<Client, 'id' | 'joinedDate'>): boolean => {
-    // Kiểm tra hạn mức học viên
-    const activeClientsCount = clients.filter(
-      (c) => c.status === 'active' || c.status === 'trial' || c.status === 'lead'
-    ).length;
+  /**
+   * THÊM KHÁCH HÀNG
+   * Hỗ trợ nhận ClientResponse (đã gọi API tạo trước đó) hoặc CreateClientRequest (tự gọi API tạo mới)
+   */
+  const addClient = async (
+    clientData: ClientResponse | CreateClientRequest
+  ): Promise<boolean> => {
+    try {
+      if ('id' in clientData && clientData.id) {
+        const clientResp = clientData as ClientResponse;
+        setClients((prev) => [clientResp, ...prev.filter((c) => c.id !== clientResp.id)]);
+        setPtPlan((prev) => ({
+          ...prev,
+          currentClients: prev.currentClients + 1,
+        }));
+        return true;
+      }
 
-    if (activeClientsCount >= ptPlan.maxClients) {
-      toast.error(
-        `Bạn đã đạt hạn mức tối đa (${ptPlan.maxClients} học viên) của gói ${ptPlan.tier}. Vui lòng nâng cấp gói để thêm khách mới!`
-      );
+      // Payload CreateClientRequest
+      const created = await clientApi.createClient(clientData as CreateClientRequest);
+      setClients((prev) => [created, ...prev.filter((c) => c.id !== created.id)]);
+      setPtPlan((prev) => ({
+        ...prev,
+        currentClients: prev.currentClients + 1,
+      }));
+      toast.success(`Đã thêm học viên ${created.fullName} thành công!`);
+      return true;
+    } catch (err: unknown) {
+      let msg = 'Không thể tạo mới hồ sơ khách hàng';
+      if (err && typeof err === 'object' && 'response' in err) {
+        const axiosErr = err as { response?: { data?: { message?: string } } };
+        if (axiosErr.response?.data?.message) {
+          msg = axiosErr.response.data.message;
+        }
+      }
+      toast.error(msg);
       return false;
     }
-
-    const newClient: Client = {
-      ...clientData,
-      id: `c-${Date.now()}`,
-      joinedDate: new Date().toISOString().split('T')[0],
-    };
-
-    setClients((prev) => [newClient, ...prev]);
-    setPtPlan((prev) => ({
-      ...prev,
-      currentClients: prev.currentClients + 1,
-    }));
-
-    toast.success(`Đã thêm học viên ${newClient.fullName} thành công!`);
-    return true;
   };
 
-  const updateClientStatus = (clientId: string, status: Client['status']) => {
-    setClients((prev) =>
-      prev.map((c) => (c.id === clientId ? { ...c, status } : c))
-    );
-    toast.success('Cập nhật trạng thái học viên thành công.');
+  /**
+   * CẬP NHẬT THÔNG TIN KHÁCH HÀNG
+   */
+  const updateClient = async (
+    id: string,
+    clientData: Partial<CreateClientRequest>
+  ): Promise<boolean> => {
+    try {
+      const updated = await clientApi.updateClient(id, clientData);
+      setClients((prev) => prev.map((c) => (c.id === id ? { ...c, ...updated } : c)));
+      toast.success('Cập nhật thông tin khách hàng thành công!');
+      return true;
+    } catch (err: unknown) {
+      let msg = 'Không thể cập nhật hồ sơ khách hàng';
+      if (err && typeof err === 'object' && 'response' in err) {
+        const axiosErr = err as { response?: { data?: { message?: string } } };
+        if (axiosErr.response?.data?.message) {
+          msg = axiosErr.response.data.message;
+        }
+      }
+      toast.error(msg);
+      return false;
+    }
   };
 
-  const updateRenewalStatus = (clientId: string, renewalStatus: Client['renewalStatus']) => {
+  /**
+   * XOÁ HỒ SƠ KHÁCH HÀNG (DELETE /api/clients/:id)
+   */
+  const deleteClient = async (id: string): Promise<boolean> => {
+    try {
+      await clientApi.deleteClient(id);
+      setClients((prev) => prev.filter((c) => c.id !== id));
+      setPtPlan((prev) => ({
+        ...prev,
+        currentClients: Math.max(0, prev.currentClients - 1),
+      }));
+      toast.success('Đã xoá hồ sơ khách hàng thành công!');
+      return true;
+    } catch (err: unknown) {
+      let msg = 'Không thể xoá hồ sơ khách hàng';
+      if (err && typeof err === 'object' && 'response' in err) {
+        const axiosErr = err as { response?: { data?: { message?: string } } };
+        if (axiosErr.response?.data?.message) {
+          msg = axiosErr.response.data.message;
+        }
+      }
+      toast.error(msg);
+      return false;
+    }
+  };
+
+  /**
+   * CẬP NHẬT TRẠNG THÁI KHÁCH HÀNG (ACTIVE, INACTIVE, FROZEN, EXPIRED)
+   */
+  const updateClientStatus = async (clientId: string, status: ClientStatus) => {
+    try {
+      const updated = await clientApi.updateClient(clientId, { status });
+      setClients((prev) =>
+        prev.map((c) => (c.id === clientId ? { ...c, ...updated, status } : c))
+      );
+      toast.success('Cập nhật trạng thái học viên thành công.');
+    } catch (err: unknown) {
+      let msg = 'Không thể cập nhật trạng thái học viên';
+      if (err && typeof err === 'object' && 'response' in err) {
+        const axiosErr = err as { response?: { data?: { message?: string } } };
+        if (axiosErr.response?.data?.message) {
+          msg = axiosErr.response.data.message;
+        }
+      }
+      toast.error(msg);
+    }
+  };
+
+  const updateRenewalStatus = (clientId: string, renewalStatus: string) => {
     setClients((prev) =>
       prev.map((c) => (c.id === clientId ? { ...c, renewalStatus } : c))
     );
     toast.success('Đã cập nhật trạng thái gia hạn.');
   };
 
-  const updateTrialStatus = (clientId: string, trialStatus: Client['trialStatus']) => {
+  const updateTrialStatus = (clientId: string, trialStatus: string) => {
     setClients((prev) =>
       prev.map((c) => (c.id === clientId ? { ...c, trialStatus } : c))
     );
@@ -381,6 +488,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         role,
         user,
         clients,
+        isLoadingClients,
+        clientsError,
         todaySessions,
         ptPlan,
         adminPTs,
@@ -392,7 +501,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         checkOutSession,
         cancelSession,
         markAbsentSession,
+        fetchClients,
         addClient,
+        updateClient,
+        deleteClient,
         updateClientStatus,
         updateRenewalStatus,
         updateTrialStatus,
@@ -412,3 +524,4 @@ export const useApp = () => {
   }
   return context;
 };
+export type { Client };
