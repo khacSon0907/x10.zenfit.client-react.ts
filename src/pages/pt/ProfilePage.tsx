@@ -302,7 +302,7 @@ export default function ProfilePage() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
-                      Số điện thoại
+                      Số điện thoại 
                     </div>
                     <div className="text-xs font-medium text-slate-800 dark:text-slate-200">
                       {profile.phone}

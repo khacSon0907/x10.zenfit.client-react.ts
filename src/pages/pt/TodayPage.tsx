@@ -185,7 +185,7 @@ export default function TodayPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-            Chào buổi tối, <span className="text-[#00d68f]">Quản Trị</span> 👋
+            Tổng Quan Hôm Nay
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
             Tiếp tục hành trình giúp học viên đạt được phiên bản tốt hơn của chính họ!

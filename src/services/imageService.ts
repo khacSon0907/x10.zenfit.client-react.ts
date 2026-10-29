@@ -183,10 +183,25 @@ export async function uploadImage(
   return result.secure_url;
 }
 
+/**
+ * Upload avatar user lên Cloudinary qua signature API Backend
+ * @param file File ảnh được chọn
+ * @param options Cấu hình nâng cao (onProgress, ...)
+ * @returns secure_url ảnh trên Cloudinary
+ */
+export async function uploadAvatarToCloudinary(
+  file: File,
+  options?: UploadImageOptions
+): Promise<string> {
+  const result = await uploadImageToCloudinary(file, 'USER_AVATAR', options);
+  return result.secure_url;
+}
+
 export const imageService = {
   validateFile: validateImageFile,
   formatErrorMessage: formatUploadErrorMessage,
   uploadToCloudinary: uploadImageToCloudinary,
+  uploadAvatarToCloudinary,
   uploadImage,
 };
 

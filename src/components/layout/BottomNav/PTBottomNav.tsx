@@ -11,6 +11,7 @@ import {
   ClipboardList,
   Wallet,
   UserCheck,
+  FileSignature,
   X,
   LogOut,
   Shield,
@@ -29,6 +30,7 @@ export default function PTBottomNav() {
   ];
 
   const extraNavItems = [
+    { to: '/pt/contracts/new', label: 'Tạo Hợp đồng PT', icon: FileSignature },
     { to: '/pt/packages', label: 'Gói & Thanh toán', icon: CreditCard },
     { to: '/pt/progress', label: 'Tiến độ & Số đo', icon: TrendingUp },
     { to: '/pt/plans', label: 'Kế hoạch & Giáo án', icon: ClipboardList },

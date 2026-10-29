@@ -15,6 +15,8 @@ export interface AvatarUploadProps {
   name?: string;
   /** Callback kích hoạt khi ảnh tải lên Cloudinary thành công */
   onChange?: (secureUrl: string, uploadData?: CloudinaryUploadResponse) => void;
+  /** Callback khi người dùng chọn file (hỗ trợ preview trước, upload sau khi submit form) */
+  onFileSelect?: (file: File) => void;
   /** Callback kích hoạt khi người dùng muốn xóa ảnh hiện tại */
   onRemove?: () => void;
   /** Mục đích upload ảnh (mặc định USER_AVATAR) */
@@ -143,6 +145,7 @@ export function AvatarUpload({
   value,
   name = 'User',
   onChange,
+  onFileSelect,
   onRemove,
   targetType = 'USER_AVATAR',
   size = 'xl',
@@ -193,7 +196,12 @@ export function AvatarUpload({
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      await upload(file, targetType);
+      if (onFileSelect) {
+        setImgLoadError(false);
+        onFileSelect(file);
+      } else {
+        await upload(file, targetType);
+      }
     }
     // Reset value để có thể chọn lại cùng 1 file nếu vừa bị lỗi
     if (fileInputRef.current) {
@@ -220,7 +228,12 @@ export function AvatarUpload({
 
     const file = e.dataTransfer.files?.[0];
     if (file) {
-      await upload(file, targetType);
+      if (onFileSelect) {
+        setImgLoadError(false);
+        onFileSelect(file);
+      } else {
+        await upload(file, targetType);
+      }
     }
   };
 

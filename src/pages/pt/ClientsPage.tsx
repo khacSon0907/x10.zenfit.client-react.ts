@@ -7,22 +7,17 @@ import {
   User,
   Phone,
   Mail,
-  Activity,
   Target,
-  HeartPulse,
-  FileText,
   Trash2,
   Edit,
   Eye,
   AlertCircle,
   Loader2,
-  UserPlus,
   X,
   CheckCircle2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useApp } from '../../context/AppContext';
-import CreateClientModal from '../../components/CreateClientModal';
 import type {
   ClientResponse,
   ClientStatus,
@@ -32,7 +27,6 @@ import type {
 import {
   CLIENT_STATUS_LABELS,
   FITNESS_GOAL_LABELS,
-  EXPERIENCE_LEVEL_LABELS,
   GENDER_LABELS,
 } from '../../types/client.types';
 
@@ -42,18 +36,13 @@ export default function ClientsPage() {
     isLoadingClients,
     clientsError,
     fetchClients,
-    addClient,
     updateClient,
     deleteClient,
   } = useApp();
 
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | ClientStatus>('ALL');
   const [goalFilter, setGoalFilter] = useState<'ALL' | FitnessGoal>('ALL');
-
-  // Modal xem chi tiết
-  const [selectedClient, setSelectedClient] = useState<ClientResponse | null>(null);
 
   // Modal chỉnh sửa
   const [editingClient, setEditingClient] = useState<ClientResponse | null>(null);
@@ -147,9 +136,6 @@ export default function ClientsPage() {
       const success = await updateClient(editingClient.id, editForm);
       if (success) {
         setEditingClient(null);
-        if (selectedClient?.id === editingClient.id) {
-          setSelectedClient((prev) => (prev ? { ...prev, ...editForm } : null));
-        }
       }
     } finally {
       setIsUpdating(false);
@@ -163,9 +149,6 @@ export default function ClientsPage() {
     try {
       const success = await deleteClient(deletingClientId);
       if (success) {
-        if (selectedClient?.id === deletingClientId) {
-          setSelectedClient(null);
-        }
         setDeletingClientId(null);
       }
     } finally {
@@ -182,9 +165,6 @@ export default function ClientsPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
             <span>Danh sách Khách hàng</span>
-            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-              API Thật
-            </span>
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
             Quản lý hồ sơ học viên, chỉ số thể chất ban đầu và thông tin mục tiêu từ Backend.
@@ -204,24 +184,14 @@ export default function ClientsPage() {
             <span className="hidden sm:inline">Làm mới</span>
           </button>
 
-          {/* Nút Thêm mới (Form đầy đủ) */}
+          {/* Nút Thêm mới khách hàng & Hợp đồng PT */}
           <Link
             to="/pt/clients/new"
-            className="hidden md:inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-semibold border border-slate-200 dark:border-slate-700 transition-colors"
-          >
-            <UserPlus className="h-4 w-4 text-emerald-500" />
-            <span>Trang tạo mới</span>
-          </Link>
-
-          {/* Nút Modal thêm nhanh */}
-          <button
-            type="button"
-            onClick={() => setIsCreateModalOpen(true)}
             className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-xl text-xs font-semibold shadow-sm hover:shadow transition-all cursor-pointer"
           >
             <Plus className="h-4 w-4" />
-            <span>Thêm khách mới</span>
-          </button>
+            <span>Thêm khách hàng mới</span>
+          </Link>
         </div>
       </div>
 
@@ -377,14 +347,13 @@ export default function ClientsPage() {
               </p>
             </div>
             {clients.length === 0 && (
-              <button
-                type="button"
-                onClick={() => setIsCreateModalOpen(true)}
+              <Link
+                to="/pt/clients/new"
                 className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold transition-colors cursor-pointer"
               >
                 <Plus className="h-4 w-4" />
                 <span>Thêm học viên mới ngay</span>
-              </button>
+              </Link>
             )}
           </div>
         ) : (
@@ -427,9 +396,12 @@ export default function ClientsPage() {
                     {/* Details */}
                     <div className="min-w-0 space-y-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-semibold text-slate-900 dark:text-white text-sm truncate">
+                        <Link
+                          to={`/pt/clients/${client.id}`}
+                          className="font-semibold text-slate-900 dark:text-white text-sm truncate hover:text-emerald-500 transition-colors"
+                        >
                           {client.fullName}
-                        </p>
+                        </Link>
                         {client.gender && (
                           <span className="text-[11px] px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-medium">
                             {GENDER_LABELS[client.gender] || client.gender}
@@ -485,14 +457,13 @@ export default function ClientsPage() {
 
                   {/* Right: Actions */}
                   <div className="flex items-center gap-2 self-end md:self-center shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedClient(client)}
+                    <Link
+                      to={`/pt/clients/${client.id}`}
                       title="Xem chi tiết hồ sơ"
                       className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                     >
                       <Eye className="h-4 w-4" />
-                    </button>
+                    </Link>
                     <button
                       type="button"
                       onClick={() => handleOpenEdit(client)}
@@ -517,207 +488,7 @@ export default function ClientsPage() {
         )}
       </div>
 
-      {/* ========================================================
-          MODAL XEM CHI TIẾT KHÁCH HÀNG
-         ======================================================== */}
-      {selectedClient && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="w-full max-w-2xl bg-white dark:bg-[#0c1626] rounded-3xl border border-slate-200 dark:border-[#162338] shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
-            {/* Header */}
-            <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between bg-slate-50/50 dark:bg-[#0f1d32]/50">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-700 flex items-center justify-center border border-slate-300 dark:border-slate-600">
-                  {selectedClient.avatarUrl ? (
-                    <img
-                      src={selectedClient.avatarUrl}
-                      alt={selectedClient.fullName}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <User className="h-5 w-5 text-slate-500" />
-                  )}
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                    {selectedClient.fullName}
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    ID: {selectedClient.id} • {selectedClient.phone}
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSelectedClient(null)}
-                className="p-1.5 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
 
-            {/* Body */}
-            <div className="p-6 overflow-y-auto space-y-6 text-xs">
-              {/* Nhóm 1: Cơ bản */}
-              <div className="space-y-3">
-                <h4 className="font-bold text-slate-900 dark:text-white uppercase tracking-wider text-[11px] flex items-center gap-1.5 text-emerald-600">
-                  <User className="h-3.5 w-3.5" />
-                  <span>Thông tin liên hệ & cá nhân</span>
-                </h4>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-850/50">
-                  <div>
-                    <span className="text-slate-400">Giới tính:</span>
-                    <p className="font-semibold text-slate-800 dark:text-slate-200 mt-0.5">
-                      {selectedClient.gender ? GENDER_LABELS[selectedClient.gender] : 'Chưa cập nhật'}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-slate-400">Ngày sinh:</span>
-                    <p className="font-semibold text-slate-800 dark:text-slate-200 mt-0.5">
-                      {selectedClient.dateOfBirth || 'Chưa cập nhật'}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-slate-400">Trạng thái:</span>
-                    <p className="font-semibold text-slate-800 dark:text-slate-200 mt-0.5">
-                      {selectedClient.status ? CLIENT_STATUS_LABELS[selectedClient.status].label : 'Đang tập'}
-                    </p>
-                  </div>
-                  <div className="col-span-2">
-                    <span className="text-slate-400">Email:</span>
-                    <p className="font-semibold text-slate-800 dark:text-slate-200 mt-0.5">
-                      {selectedClient.email || 'Chưa cập nhật'}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-slate-400">Ngày tham gia:</span>
-                    <p className="font-semibold text-slate-800 dark:text-slate-200 mt-0.5">
-                      {selectedClient.joinedDate || 'Chưa cập nhật'}
-                    </p>
-                  </div>
-                  <div className="col-span-3">
-                    <span className="text-slate-400">Địa chỉ:</span>
-                    <p className="font-semibold text-slate-800 dark:text-slate-200 mt-0.5">
-                      {selectedClient.address || 'Chưa cập nhật'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Nhóm 2: Thể lực & Mục tiêu */}
-              <div className="space-y-3">
-                <h4 className="font-bold text-slate-900 dark:text-white uppercase tracking-wider text-[11px] flex items-center gap-1.5 text-emerald-600">
-                  <Activity className="h-3.5 w-3.5" />
-                  <span>Chỉ số thể chất & Mục tiêu</span>
-                </h4>
-                <div className="grid grid-cols-3 gap-3 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-850/50">
-                  <div>
-                    <span className="text-slate-400">Chiều cao:</span>
-                    <p className="font-semibold text-slate-800 dark:text-slate-200 mt-0.5">
-                      {selectedClient.height ? `${selectedClient.height} cm` : 'Chưa đo'}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-slate-400">Cân nặng ban đầu:</span>
-                    <p className="font-semibold text-slate-800 dark:text-slate-200 mt-0.5">
-                      {selectedClient.initialWeight ? `${selectedClient.initialWeight} kg` : 'Chưa đo'}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-slate-400">Mục tiêu cân nặng:</span>
-                    <p className="font-semibold text-emerald-600 dark:text-emerald-400 mt-0.5">
-                      {selectedClient.targetWeight ? `${selectedClient.targetWeight} kg` : 'Chưa đặt'}
-                    </p>
-                  </div>
-                  <div className="col-span-2">
-                    <span className="text-slate-400">Mục tiêu thể hình:</span>
-                    <p className="font-semibold text-slate-800 dark:text-slate-200 mt-0.5">
-                      {selectedClient.fitnessGoal ? FITNESS_GOAL_LABELS[selectedClient.fitnessGoal] : 'Chưa chọn'}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-slate-400">Trình độ kinh nghiệm:</span>
-                    <p className="font-semibold text-slate-800 dark:text-slate-200 mt-0.5">
-                      {selectedClient.experienceLevel
-                        ? EXPERIENCE_LEVEL_LABELS[selectedClient.experienceLevel]
-                        : 'Mới bắt đầu'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Nhóm 3: Sức khỏe & Chấn thương */}
-              <div className="space-y-3">
-                <h4 className="font-bold text-slate-900 dark:text-white uppercase tracking-wider text-[11px] flex items-center gap-1.5 text-emerald-600">
-                  <HeartPulse className="h-3.5 w-3.5" />
-                  <span>Sức khỏe & An toàn tập luyện</span>
-                </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-850/50">
-                  <div>
-                    <span className="text-slate-400">Bệnh lý nền:</span>
-                    <p className="font-semibold text-slate-800 dark:text-slate-200 mt-0.5">
-                      {selectedClient.medicalConditions || 'Không có'}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-slate-400">Tiền sử chấn thương:</span>
-                    <p className="font-semibold text-slate-800 dark:text-slate-200 mt-0.5">
-                      {selectedClient.injuries || 'Không có'}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-slate-400">Người liên hệ khẩn cấp:</span>
-                    <p className="font-semibold text-slate-800 dark:text-slate-200 mt-0.5">
-                      {selectedClient.emergencyContactName || 'Chưa có'}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-slate-400">SĐT khẩn cấp:</span>
-                    <p className="font-semibold text-slate-800 dark:text-slate-200 mt-0.5">
-                      {selectedClient.emergencyContactPhone || 'Chưa có'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Nhóm 4: Ghi chú */}
-              {selectedClient.notes && (
-                <div className="space-y-2">
-                  <h4 className="font-bold text-slate-900 dark:text-white uppercase tracking-wider text-[11px] flex items-center gap-1.5 text-emerald-600">
-                    <FileText className="h-3.5 w-3.5" />
-                    <span>Ghi chú của PT</span>
-                  </h4>
-                  <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-850/50 text-slate-700 dark:text-slate-300 whitespace-pre-line leading-relaxed">
-                    {selectedClient.notes}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Footer */}
-            <div className="px-6 py-3.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between bg-slate-50/50 dark:bg-[#0f1d32]/50">
-              <button
-                type="button"
-                onClick={() => {
-                  const toEdit = selectedClient;
-                  setSelectedClient(null);
-                  handleOpenEdit(toEdit);
-                }}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-medium cursor-pointer"
-              >
-                <Edit className="h-3.5 w-3.5" />
-                <span>Chỉnh sửa hồ sơ này</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedClient(null)}
-                className="px-4 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
-              >
-                Đóng
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ========================================================
           MODAL CHỈNH SỬA KHÁCH HÀNG
@@ -913,14 +684,6 @@ export default function ClientsPage() {
         </div>
       )}
 
-      {/* Modal Thêm Mới Hồ Sơ Khách Hàng */}
-      <CreateClientModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onSuccess={async (newClient) => {
-          await addClient(newClient);
-        }}
-      />
     </div>
   );
 }

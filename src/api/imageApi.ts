@@ -39,14 +39,34 @@ export const imageApi = {
    * 4. Trả về secure_url.
    * 
    * @param file File ảnh được chọn
+   * @param onProgress Callback theo dõi tiến độ tải lên (0 - 100%)
    * @returns secure_url ảnh trên Cloudinary
    */
-  uploadClientAvatar: async (file: File): Promise<string> => {
-    const uploadRes = await uploadImageToCloudinary(file, 'CLIENT_AVATAR');
+  uploadClientAvatar: async (
+    file: File,
+    onProgress?: (percent: number) => void
+  ): Promise<string> => {
+    const uploadRes = await uploadImageToCloudinary(file, 'CLIENT_AVATAR', { onProgress });
+    return uploadRes.secure_url;
+  },
+
+  /**
+   * Upload ảnh góc chụp vóc dáng học viên (Mặt trước, Mặt sau, Mặt nghiêng) lên Cloudinary
+   * 
+   * @param file File ảnh vóc dáng
+   * @param onProgress Callback theo dõi tiến độ tải lên (0 - 100%)
+   * @returns secure_url ảnh trên Cloudinary
+   */
+  uploadClientBodyPhoto: async (
+    file: File,
+    onProgress?: (percent: number) => void
+  ): Promise<string> => {
+    const uploadRes = await uploadImageToCloudinary(file, 'CLIENT_BODY_PHOTO', { onProgress });
     return uploadRes.secure_url;
   },
 };
 
 export const getImageSignature = imageApi.getSignature;
 export const uploadClientAvatar = imageApi.uploadClientAvatar;
+export const uploadClientBodyPhoto = imageApi.uploadClientBodyPhoto;
 export default imageApi;

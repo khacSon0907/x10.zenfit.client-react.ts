@@ -4,6 +4,8 @@ import type {
   ClientResponse,
   ClientStatus,
   CreateClientRequest,
+  CreatePtContractRequest,
+  ContractStatus,
   ExperienceLevel,
   FitnessGoal,
   Gender,
@@ -14,6 +16,8 @@ export type {
   ClientResponse,
   ClientStatus,
   CreateClientRequest,
+  CreatePtContractRequest,
+  ContractStatus,
   ExperienceLevel,
   FitnessGoal,
   Gender,
@@ -22,12 +26,12 @@ export type {
 /**
  * ============================================================================
  * CLIENT API SERVICE
- * Quản lý các endpoint CRUD Hồ sơ Khách hàng / Học viên
+ * Quản lý các endpoint CRUD & Tìm kiếm Hồ sơ Khách hàng / Học viên
  * ============================================================================
  */
 export const clientApi = {
   /**
-   * Tạo mới hồ sơ khách hàng
+   * Tạo mới hồ sơ khách hàng độc lập
    * POST /api/clients
    * 
    * @param data Payload thông tin khách hàng (CreateClientRequest)
@@ -36,6 +40,22 @@ export const clientApi = {
   createClient: async (data: CreateClientRequest): Promise<ClientResponse> => {
     const response = await axiosClient.post<ApiResponse<ClientResponse>>('/api/clients', data);
     return response.data.data;
+  },
+
+  /**
+   * Tìm kiếm khách hàng theo từ khoá (Họ tên hoặc Số điện thoại)
+   * Phục vụ tính năng Search debounce tự động khi tạo Hợp đồng PT
+   * GET /api/clients/search?keyword=...
+   * 
+   * @param keyword Từ khoá tìm kiếm
+   * @returns Danh sách khách hàng phù hợp
+   */
+  searchClients: async (keyword: string): Promise<ClientResponse[]> => {
+    if (!keyword.trim()) return [];
+    const response = await axiosClient.get<ApiResponse<ClientResponse[]>>('/api/clients/search', {
+      params: { keyword: keyword.trim() },
+    });
+    return response.data.data ?? [];
   },
 
   /**
@@ -49,7 +69,7 @@ export const clientApi = {
     const response = await axiosClient.get<ApiResponse<ClientResponse[]>>('/api/clients', {
       params: trainerId ? { trainerId } : undefined,
     });
-    return response.data.data;
+    return response.data.data ?? [];
   },
 
   /**
@@ -95,6 +115,7 @@ export const clientApi = {
 };
 
 export const createClient = clientApi.createClient;
+export const searchClients = clientApi.searchClients;
 export const getAllClients = clientApi.getAllClients;
 export const getClientById = clientApi.getClientById;
 export const updateClient = clientApi.updateClient;

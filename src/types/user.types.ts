@@ -42,3 +42,16 @@ export interface UserProfile {
   roles?: string[];
   accessToken?: string;
 }
+
+/**
+ * Payload gửi lên PUT /api/user/me/update
+ */
+export interface UpdateUserRequest {
+  username?: string;
+  phoneNumber?: string;
+  avatarUrl?: string;
+  birthday?: string | null; // Định dạng ISO: YYYY-MM-DD
+}
+
+export type UpdateUserResponse = UserProfile;
+

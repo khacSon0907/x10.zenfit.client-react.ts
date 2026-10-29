@@ -3,6 +3,7 @@ import {
   Home,
   Calendar,
   Users,
+  FileSignature,
   CreditCard,
   TrendingUp,
   ClipboardList,
@@ -28,9 +29,10 @@ export default function PTSidebar({
   onToggleCollapse,
 }: PTSidebarProps) {
   const navItems = [
-    { to: '/pt/today', label: 'Tổng quan', icon: Home },
+    { to: '/pt/today', label: 'Tổng quan', icon: Home, end: true },
     { to: '/pt/schedule', label: 'Lịch tập', icon: Calendar },
-    { to: '/pt/clients', label: 'Học viên', icon: Users },
+    { to: '/pt/clients', label: 'Học viên', icon: Users, end: true },
+    { to: '/pt/contracts/new', label: 'Tạo hợp đồng PT', icon: FileSignature },
     { to: '/pt/packages', label: 'Gói tập & thanh toán', icon: CreditCard },
     { to: '/pt/progress', label: 'Tiến độ & số đo', icon: TrendingUp },
     { to: '/pt/plans', label: 'Giáo án & dinh dưỡng', icon: ClipboardList },
@@ -109,7 +111,7 @@ export default function PTSidebar({
               key={item.label}
               to={item.to}
               onClick={onCloseMobile}
-              end={item.to === '/pt/today'}
+              end={item.end ?? item.to === '/pt/today'}
               className={({ isActive }) =>
                 `group relative flex items-center ${
                   isCollapsed
@@ -162,38 +164,7 @@ export default function PTSidebar({
           </div>
         ) : (
           <div className="space-y-3">
-            {/* Promo Card */}
-            <div className="relative rounded-2xl overflow-hidden p-4 bg-gradient-to-br from-emerald-50/80 via-white to-emerald-100/30 dark:from-[#0b2420] dark:via-[#0b1728] dark:to-[#07101b] border border-emerald-200/70 dark:border-emerald-700/30 shadow-xs group">
-              <div className="absolute -top-10 -right-10 w-32 h-32 bg-emerald-500/10 dark:bg-emerald-500/15 rounded-full blur-2xl pointer-events-none" />
-              <div className="absolute right-2 bottom-2 text-emerald-500/10 pointer-events-none">
-                <Dumbbell className="w-20 h-20 rotate-[-25deg]" />
-              </div>
-
-              <div className="relative z-10 space-y-3">
-                <div>
-                  <p className="text-xs font-bold text-slate-900 dark:text-white tracking-wide leading-snug">
-                    Kỷ luật hôm nay
-                  </p>
-                  <p className="text-[11px] text-slate-600 dark:text-slate-300 font-medium leading-snug">
-                    Tạo nên kết quả ngày mai
-                  </p>
-                </div>
-
-                <div className="pt-2.5 border-t border-emerald-500/20 flex items-center gap-2">
-                  <div className="h-6 w-6 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center p-1">
-                    <img src={logo} alt="ZenFit" className="h-full w-full object-contain" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-xs font-bold text-slate-900 dark:text-white leading-none">
-                      Zen<span className="text-[#00d68f]">Fit</span>
-                    </div>
-                    <div className="text-[9px] text-slate-500 dark:text-slate-400 font-medium truncate mt-0.5">
-                      Better You. Stronger Tomorrow.
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+         
 
             {/* Collapse button on expanded state */}
             {onToggleCollapse && (
