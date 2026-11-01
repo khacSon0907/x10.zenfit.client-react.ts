@@ -261,7 +261,7 @@ function CreateClientModalDialog({
     try {
       // Bước 1: Upload avatar lên Cloudinary nếu người dùng có chọn ảnh
       if (selectedFile) {
-        setSubmitStep('Đang tải ảnh đại diện lên Cloudinary...');
+        setSubmitStep('Đang tải ảnh đại diện...');
         try {
           uploadedAvatarUrl = await uploadClientAvatar(selectedFile);
         } catch (uploadErr) {

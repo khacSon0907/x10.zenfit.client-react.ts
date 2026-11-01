@@ -56,10 +56,35 @@ export const contractApi = {
     );
     return response.data.data;
   },
+
+  /**
+   * Lấy danh sách hợp đồng theo trainerId của PT
+   * GET /api/pt-contracts/trainer/:trainerId
+   * 
+   * @param trainerId ID của huấn luyện viên PT
+   */
+  getContractsByTrainerId: async (trainerId: string): Promise<PtContractResponse[]> => {
+    const response = await axiosClient.get<ApiResponse<PtContractResponse[]>>(
+      `/api/pt-contracts/trainer/${trainerId}`
+    );
+    return response.data.data ?? [];
+  },
+
+  /**
+   * Xóa hợp đồng PT theo ID
+   * DELETE /api/pt-contracts/:id
+   * 
+   * @param id Mã hợp đồng
+   */
+  deleteContract: async (id: string): Promise<void> => {
+    await axiosClient.delete<ApiResponse<void>>(`/api/pt-contracts/${id}`);
+  },
 };
 
 export const createPtContract = contractApi.createPtContract;
 export const getAllContracts = contractApi.getAllContracts;
 export const getContractById = contractApi.getContractById;
-
+export const getContractsByTrainerId = contractApi.getContractsByTrainerId;
+export const deleteContract = contractApi.deleteContract;
+                                                                                                                              
 export default contractApi;

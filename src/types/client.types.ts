@@ -66,6 +66,38 @@ export interface ClientResponse {
 export type Client = ClientResponse;
 
 /**
+ * Request cập nhật thông tin khách hàng
+ * Endpoint: PUT /api/clients/:id
+ */
+export interface UpdateClientRequest {
+  fullName: string;
+  gender?: Gender | string;
+  dateOfBirth?: string | null;
+  phone: string;
+  email?: string | null;
+  address?: string | null;
+  avatarUrl?: string | null;
+  status?: ClientStatus;
+  frontPhotoUrl?: string | null;
+  backPhotoUrl?: string | null;
+  sidePhotoUrl?: string | null;
+  height?: number | null;
+  initialWeight?: number | null;
+  assignedTrainerId?: string | null;
+  notes?: string | null;
+  joinedDate?: string | null;
+
+  // Các trường mở rộng
+  targetWeight?: number | null;
+  fitnessGoal?: FitnessGoal | string;
+  experienceLevel?: ExperienceLevel | string;
+  medicalConditions?: string | null;
+  injuries?: string | null;
+  emergencyContactName?: string | null;
+  emergencyContactPhone?: string | null;
+}
+
+/**
  * Request tạo mới khách hàng độc lập
  * Endpoint: POST /api/clients
  */
@@ -154,6 +186,7 @@ export interface PtContractResponse {
   bonusSessions?: number;
   completedSessions?: number;
   remainingSessions?: number;
+  usedSessions?: number;
   startDate?: string;
   endDate?: string;
   price: number;

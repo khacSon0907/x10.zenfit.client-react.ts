@@ -422,7 +422,7 @@ export default function CreateClientPage() {
 
       // 1.1 Upload Avatar
       if (avatarSlot.file) {
-        setSubmitStep('Đang tải ảnh đại diện lên Cloudinary...');
+        setSubmitStep('Đang tải ảnh đại diện...');
         try {
           uploadedAvatarUrl = await uploadClientAvatar(avatarSlot.file);
         } catch (uploadErr) {
@@ -436,7 +436,7 @@ export default function CreateClientPage() {
 
       // 1.2 Upload Ảnh Mặt trước
       if (frontPhotoSlot.file) {
-        setSubmitStep('Đang tải ảnh vóc dáng mặt trước lên Cloudinary...');
+        setSubmitStep('Đang tải ảnh vóc dáng mặt trước...');
         try {
           uploadedFrontPhotoUrl = await uploadClientBodyPhoto(frontPhotoSlot.file);
         } catch (uploadErr) {
@@ -450,7 +450,7 @@ export default function CreateClientPage() {
 
       // 1.3 Upload Ảnh Mặt sau
       if (backPhotoSlot.file) {
-        setSubmitStep('Đang tải ảnh vóc dáng mặt sau lên Cloudinary...');
+        setSubmitStep('Đang tải ảnh vóc dáng mặt sau...');
         try {
           uploadedBackPhotoUrl = await uploadClientBodyPhoto(backPhotoSlot.file);
         } catch (uploadErr) {
@@ -464,7 +464,7 @@ export default function CreateClientPage() {
 
       // 1.4 Upload Ảnh Mặt nghiêng
       if (sidePhotoSlot.file) {
-        setSubmitStep('Đang tải ảnh vóc dáng mặt nghiêng lên Cloudinary...');
+        setSubmitStep('Đang tải ảnh vóc dáng mặt nghiêng...');
         try {
           uploadedSidePhotoUrl = await uploadClientBodyPhoto(sidePhotoSlot.file);
         } catch (uploadErr) {
@@ -860,7 +860,7 @@ export default function CreateClientPage() {
                     {creationMode === 'CONTRACT_WITH_CLIENT' ? '2' : '1'}
                   </span>
                   <h2 className="text-base font-bold text-slate-900 dark:text-white">
-                    Thông Tin Hồ Sơ Học Viên (ClientEntity)
+                    Thông Tin Hồ Sơ Học Viên
                   </h2>
                 </div>
                 <span className="text-xs text-slate-400">

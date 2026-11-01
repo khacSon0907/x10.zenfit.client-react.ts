@@ -32,7 +32,7 @@ export default function PTSidebar({
     { to: '/pt/today', label: 'Tổng quan', icon: Home, end: true },
     { to: '/pt/schedule', label: 'Lịch tập', icon: Calendar },
     { to: '/pt/clients', label: 'Học viên', icon: Users, end: true },
-    { to: '/pt/contracts/new', label: 'Tạo hợp đồng PT', icon: FileSignature },
+    { to: '/pt/contracts', label: 'Hợp đồng PT', icon: FileSignature },
     { to: '/pt/packages', label: 'Gói tập & thanh toán', icon: CreditCard },
     { to: '/pt/progress', label: 'Tiến độ & số đo', icon: TrendingUp },
     { to: '/pt/plans', label: 'Giáo án & dinh dưỡng', icon: ClipboardList },

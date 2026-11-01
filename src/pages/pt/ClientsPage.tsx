@@ -8,21 +8,15 @@ import {
   Phone,
   Mail,
   Target,
-  Trash2,
-  Edit,
   Eye,
   AlertCircle,
   Loader2,
   X,
-  CheckCircle2,
 } from 'lucide-react';
-import { toast } from 'sonner';
 import { useApp } from '../../context/AppContext';
 import type {
-  ClientResponse,
   ClientStatus,
   FitnessGoal,
-  CreateClientRequest,
 } from '../../types/client.types';
 import {
   CLIENT_STATUS_LABELS,
@@ -36,22 +30,11 @@ export default function ClientsPage() {
     isLoadingClients,
     clientsError,
     fetchClients,
-    updateClient,
-    deleteClient,
   } = useApp();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | ClientStatus>('ALL');
   const [goalFilter, setGoalFilter] = useState<'ALL' | FitnessGoal>('ALL');
-
-  // Modal chỉnh sửa
-  const [editingClient, setEditingClient] = useState<ClientResponse | null>(null);
-  const [editForm, setEditForm] = useState<Partial<CreateClientRequest>>({});
-  const [isUpdating, setIsUpdating] = useState(false);
-
-  // Modal xoá
-  const [deletingClientId, setDeletingClientId] = useState<string | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   // Tự động tải lại dữ liệu khi trang mount nếu danh sách rỗng
   useEffect(() => {
@@ -92,69 +75,6 @@ export default function ClientsPage() {
     const expired = clients.filter((c) => c.status === 'EXPIRED').length;
     return { total, active, frozen, inactive, expired };
   }, [clients]);
-
-  // Xử lý mở modal chỉnh sửa
-  const handleOpenEdit = (client: ClientResponse) => {
-    setEditingClient(client);
-    setEditForm({
-      fullName: client.fullName || '',
-      phone: client.phone || '',
-      email: client.email || '',
-      gender: client.gender || 'MALE',
-      dateOfBirth: client.dateOfBirth || '',
-      address: client.address || '',
-      status: client.status || 'ACTIVE',
-      height: client.height,
-      initialWeight: client.initialWeight,
-      targetWeight: client.targetWeight,
-      fitnessGoal: client.fitnessGoal || 'LOSE_FAT',
-      experienceLevel: client.experienceLevel || 'BEGINNER',
-      medicalConditions: client.medicalConditions || '',
-      injuries: client.injuries || '',
-      emergencyContactName: client.emergencyContactName || '',
-      emergencyContactPhone: client.emergencyContactPhone || '',
-      notes: client.notes || '',
-    });
-  };
-
-  // Xử lý submit chỉnh sửa
-  const handleSaveEdit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingClient) return;
-
-    if (!editForm.fullName?.trim()) {
-      toast.error('Họ và tên không được để trống');
-      return;
-    }
-    if (!editForm.phone?.trim()) {
-      toast.error('Số điện thoại không được để trống');
-      return;
-    }
-
-    setIsUpdating(true);
-    try {
-      const success = await updateClient(editingClient.id, editForm);
-      if (success) {
-        setEditingClient(null);
-      }
-    } finally {
-      setIsUpdating(false);
-    }
-  };
-
-  // Xử lý xoá khách hàng
-  const handleConfirmDelete = async () => {
-    if (!deletingClientId) return;
-    setIsDeleting(true);
-    try {
-      const success = await deleteClient(deletingClientId);
-      if (success) {
-        setDeletingClientId(null);
-      }
-    } finally {
-      setIsDeleting(false);
-    }
-  };
 
   return (
     <div className="space-y-6 pb-12 animate-in fade-in duration-200">
@@ -243,21 +163,7 @@ export default function ClientsPage() {
             )}
           </div>
 
-          {/* Lọc theo Mục tiêu */}
-          <div className="w-full md:w-56">
-            <select
-              value={goalFilter}
-              onChange={(e) => setGoalFilter(e.target.value as 'ALL' | FitnessGoal)}
-              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-850/60 border border-slate-200 dark:border-slate-700/80 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            >
-              <option value="ALL">Mọi mục tiêu thể hình</option>
-              {(Object.keys(FITNESS_GOAL_LABELS) as FitnessGoal[]).map((goal) => (
-                <option key={goal} value={goal}>
-                  {FITNESS_GOAL_LABELS[goal]}
-                </option>
-              ))}
-            </select>
-          </div>
+          
         </div>
 
         {/* Tabs Lọc Trạng Thái */}
@@ -460,26 +366,10 @@ export default function ClientsPage() {
                     <Link
                       to={`/pt/clients/${client.id}`}
                       title="Xem chi tiết hồ sơ"
-                      className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                      className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer"
                     >
                       <Eye className="h-4 w-4" />
                     </Link>
-                    <button
-                      type="button"
-                      onClick={() => handleOpenEdit(client)}
-                      title="Chỉnh sửa thông tin"
-                      className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                    >
-                      <Edit className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setDeletingClientId(client.id)}
-                      title="Xoá hồ sơ khách hàng"
-                      className="p-2 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
                   </div>
                 </div>
               );
@@ -487,203 +377,7 @@ export default function ClientsPage() {
           </div>
         )}
       </div>
-
-
-
-      {/* ========================================================
-          MODAL CHỈNH SỬA KHÁCH HÀNG
-         ======================================================== */}
-      {editingClient && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="w-full max-w-xl bg-white dark:bg-[#0c1626] rounded-3xl border border-slate-200 dark:border-[#162338] shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
-            <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between bg-slate-50/50 dark:bg-[#0f1d32]/50">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <Edit className="h-4 w-4 text-emerald-500" />
-                <span>Cập nhật Hồ sơ Khách hàng</span>
-              </h3>
-              <button
-                type="button"
-                onClick={() => setEditingClient(null)}
-                className="p-1.5 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSaveEdit} className="p-6 overflow-y-auto space-y-4 text-xs">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="font-semibold text-slate-700 dark:text-slate-300">
-                    Họ và tên <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={editForm.fullName || ''}
-                    onChange={(e) => setEditForm((p) => ({ ...p, fullName: e.target.value }))}
-                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-850/60 border border-slate-200 dark:border-slate-700/80 rounded-xl text-slate-900 dark:text-white"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="font-semibold text-slate-700 dark:text-slate-300">
-                    Số điện thoại <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="tel"
-                    value={editForm.phone || ''}
-                    onChange={(e) => setEditForm((p) => ({ ...p, phone: e.target.value }))}
-                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-850/60 border border-slate-200 dark:border-slate-700/80 rounded-xl text-slate-900 dark:text-white"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="font-semibold text-slate-700 dark:text-slate-300">Email</label>
-                  <input
-                    type="email"
-                    value={editForm.email || ''}
-                    onChange={(e) => setEditForm((p) => ({ ...p, email: e.target.value }))}
-                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-850/60 border border-slate-200 dark:border-slate-700/80 rounded-xl text-slate-900 dark:text-white"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="font-semibold text-slate-700 dark:text-slate-300">Trạng thái</label>
-                  <select
-                    value={editForm.status || 'ACTIVE'}
-                    onChange={(e) => setEditForm((p) => ({ ...p, status: e.target.value as ClientStatus }))}
-                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-850/60 border border-slate-200 dark:border-slate-700/80 rounded-xl text-slate-900 dark:text-white"
-                  >
-                    {(Object.keys(CLIENT_STATUS_LABELS) as ClientStatus[]).map((st) => (
-                      <option key={st} value={st}>
-                        {CLIENT_STATUS_LABELS[st].label} ({st})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="font-semibold text-slate-700 dark:text-slate-300">Mục tiêu thể hình</label>
-                  <select
-                    value={editForm.fitnessGoal || 'LOSE_FAT'}
-                    onChange={(e) => setEditForm((p) => ({ ...p, fitnessGoal: e.target.value as FitnessGoal }))}
-                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-850/60 border border-slate-200 dark:border-slate-700/80 rounded-xl text-slate-900 dark:text-white"
-                  >
-                    {(Object.keys(FITNESS_GOAL_LABELS) as FitnessGoal[]).map((goal) => (
-                      <option key={goal} value={goal}>
-                        {FITNESS_GOAL_LABELS[goal]}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="font-semibold text-slate-700 dark:text-slate-300">Cân nặng mục tiêu (kg)</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={editForm.targetWeight ?? ''}
-                    onChange={(e) =>
-                      setEditForm((p) => ({
-                        ...p,
-                        targetWeight: e.target.value ? parseFloat(e.target.value) : undefined,
-                      }))
-                    }
-                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-850/60 border border-slate-200 dark:border-slate-700/80 rounded-xl text-slate-900 dark:text-white"
-                  />
-                </div>
-
-                <div className="col-span-1 sm:col-span-2 space-y-1">
-                  <label className="font-semibold text-slate-700 dark:text-slate-300">Ghi chú của PT</label>
-                  <textarea
-                    rows={3}
-                    value={editForm.notes || ''}
-                    onChange={(e) => setEditForm((p) => ({ ...p, notes: e.target.value }))}
-                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-850/60 border border-slate-200 dark:border-slate-700/80 rounded-xl text-slate-900 dark:text-white resize-none"
-                  />
-                </div>
-              </div>
-
-              <div className="pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setEditingClient(null)}
-                  disabled={isUpdating}
-                  className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-semibold cursor-pointer"
-                >
-                  Huỷ
-                </button>
-                <button
-                  type="submit"
-                  disabled={isUpdating}
-                  className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold cursor-pointer disabled:opacity-60"
-                >
-                  {isUpdating ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>Đang lưu...</span>
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle2 className="h-4 w-4" />
-                      <span>Lưu thay đổi</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* ========================================================
-          MODAL XÁC NHẬN XOÁ KHÁCH HÀNG
-         ======================================================== */}
-      {deletingClientId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="w-full max-w-md bg-white dark:bg-[#0c1626] rounded-3xl border border-slate-200 dark:border-[#162338] shadow-2xl p-6 space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-2xl bg-rose-500/10 text-rose-500">
-                <Trash2 className="h-6 w-6" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                  Xác nhận xoá khách hàng
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  Hành động này sẽ xoá hoàn toàn hồ sơ khỏi cơ sở dữ liệu ZenFit.
-                </p>
-              </div>
-            </div>
-
-            <div className="pt-2 flex items-center justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setDeletingClientId(null)}
-                disabled={isDeleting}
-                className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold cursor-pointer"
-              >
-                Huỷ bỏ
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmDelete}
-                disabled={isDeleting}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold cursor-pointer disabled:opacity-60"
-              >
-                {isDeleting ? (
-                  <>
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    <span>Đang xoá...</span>
-                  </>
-                ) : (
-                  <span>Xoá vĩnh viễn</span>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
     </div>
   );
 }
+

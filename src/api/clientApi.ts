@@ -4,6 +4,7 @@ import type {
   ClientResponse,
   ClientStatus,
   CreateClientRequest,
+  UpdateClientRequest,
   CreatePtContractRequest,
   ContractStatus,
   ExperienceLevel,
@@ -16,6 +17,7 @@ export type {
   ClientResponse,
   ClientStatus,
   CreateClientRequest,
+  UpdateClientRequest,
   CreatePtContractRequest,
   ContractStatus,
   ExperienceLevel,
@@ -94,7 +96,7 @@ export const clientApi = {
    */
   updateClient: async (
     id: string,
-    data: Partial<CreateClientRequest>
+    data: UpdateClientRequest | Partial<CreateClientRequest>
   ): Promise<ClientResponse> => {
     const response = await axiosClient.put<ApiResponse<ClientResponse>>(
       `/api/clients/${id}`,

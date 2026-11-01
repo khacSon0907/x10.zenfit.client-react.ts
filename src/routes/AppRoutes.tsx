@@ -12,6 +12,8 @@ import PTLayout from '../components/layout/PTLayout';
 import TodayPage from '../pages/pt/TodayPage';
 import ClientsPage from '../pages/pt/ClientsPage';
 import CreateClientPage from '../pages/pt/CreateClientPage';
+import ContractsPage from '../pages/pt/ContractsPage';
+import CreatePtContractPage from '../pages/pt/CreatePtContractPage';
 import ClientDetailPage from '../pages/pt/ClientDetailPage';
 import SchedulePage from '../pages/pt/SchedulePage';
 import TrialsRenewalsPage from '../pages/pt/TrialsRenewalsPage';
@@ -139,8 +141,8 @@ export default function AppRoutes() {
         <Route path="clients" element={<ClientsPage />} />
         <Route path="clients/new" element={<CreateClientPage />} />
         <Route path="clients/:id" element={<ClientDetailPage />} />
-        <Route path="contracts" element={<Navigate to="/pt/contracts/new" replace />} />
-        <Route path="contracts/new" element={<CreateClientPage />} />
+        <Route path="contracts" element={<ContractsPage />} />
+        <Route path="contracts/new" element={<CreatePtContractPage />} />
         <Route path="schedule" element={<SchedulePage />} />
         <Route path="renewals" element={<TrialsRenewalsPage />} />
         <Route path="packages" element={<PackagesPaymentsPage />} />
