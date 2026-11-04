@@ -1661,33 +1661,7 @@ export default function ClientDetailPage() {
           </div>
 
           {/* Card: Hành động nhanh (Quick Actions) */}
-          <div className="rounded-3xl bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-transparent border border-emerald-500/20 p-6 space-y-4">
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-emerald-500" />
-              <span>Hành Động Huấn Luyện</span>
-            </h3>
-
-            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-              Bạn có thể ký hợp đồng huấn luyện mới hoặc lên lịch tập luyện cho học viên này trực tiếp trên hệ thống ZenFit.
-            </p>
-
-            <div className="flex items-center gap-3 pt-1 flex-wrap">
-              <Link
-                to={`/pt/contracts/new?clientId=${client.id}`}
-                className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold shadow-md shadow-emerald-500/20 transition-all cursor-pointer"
-              >
-                <FileSignature className="h-4 w-4" />
-                <span>Lập Hợp Đồng PT Mới</span>
-              </Link>
-              <Link
-                to="/pt/schedule"
-                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-colors cursor-pointer"
-              >
-                <Calendar className="h-4 w-4" />
-                <span>Lên lịch tập</span>
-              </Link>
-            </div>
-          </div>
+         
         </div>
       </div>
 

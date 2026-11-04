@@ -7,7 +7,8 @@
 
 // Enum trạng thái khách hàng & hợp đồng
 export type ClientStatus = 'ACTIVE' | 'INACTIVE' | 'POTENTIAL' | 'EXPIRED' | 'FROZEN';
-export type ContractStatus = 'ACTIVE' | 'COMPLETED' | 'EXPIRED' | 'FROZEN' | 'CANCELLED';
+export type ContractStatus = 'ACTIVE' | 'COMPLETED' | 'EXPIRED' | 'FROZEN' | 'CANCELLED' | 'SUSPENDED';
+export type PaymentContractStatus = 'UNPAID' | 'PARTIALLY_PAID' | 'PAID' | 'REFUNDED';
 export type GoalPhaseStatus = 'PLANNED' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED';
 
 export type FitnessGoal =
@@ -165,7 +166,9 @@ export interface CreatePtContractRequest {
   startDate?: string;
   endDate?: string;
   price: number;
+  pricePerSession?: number;
   paidAmount?: number;
+  paymentContractStatus?: PaymentContractStatus;
   status?: ContractStatus;
   notes?: string;
 }
@@ -190,7 +193,9 @@ export interface PtContractResponse {
   startDate?: string;
   endDate?: string;
   price: number;
+  pricePerSession?: number;
   paidAmount?: number;
+  paymentContractStatus?: PaymentContractStatus;
   status: ContractStatus;
   notes?: string;
   createdAt?: string;
@@ -214,6 +219,37 @@ export const CONTRACT_STATUS_LABELS: Record<ContractStatus, { label: string; col
   EXPIRED: { label: 'Hết hạn', color: 'bg-rose-500/15 text-rose-600 border-rose-500/30' },
   FROZEN: { label: 'Tạm bảo lưu', color: 'bg-amber-500/15 text-amber-600 border-amber-500/30' },
   CANCELLED: { label: 'Đã hủy', color: 'bg-slate-500/15 text-slate-600 border-slate-500/30' },
+  SUSPENDED: { label: 'Tạm đình chỉ', color: 'bg-orange-500/15 text-orange-600 border-orange-500/30' },
+};
+
+export const PAYMENT_CONTRACT_STATUS_CONFIG: Record<
+  PaymentContractStatus,
+  { label: string; badgeClass: string; dotClass: string; variant: 'destructive' | 'warning' | 'success' | 'secondary' }
+> = {
+  UNPAID: {
+    label: 'Chưa thanh toán',
+    badgeClass: 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30',
+    dotClass: 'bg-rose-500',
+    variant: 'destructive',
+  },
+  PARTIALLY_PAID: {
+    label: 'Thanh toán 1 phần',
+    badgeClass: 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30',
+    dotClass: 'bg-amber-500',
+    variant: 'warning',
+  },
+  PAID: {
+    label: 'Đã thanh toán đủ',
+    badgeClass: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30',
+    dotClass: 'bg-emerald-500',
+    variant: 'success',
+  },
+  REFUNDED: {
+    label: 'Đã hoàn tiền',
+    badgeClass: 'bg-slate-500/15 text-slate-600 dark:text-slate-400 border-slate-500/30',
+    dotClass: 'bg-slate-400',
+    variant: 'secondary',
+  },
 };
 
 export const GOAL_TYPE_LABELS: Record<string, { label: string; description: string }> = {

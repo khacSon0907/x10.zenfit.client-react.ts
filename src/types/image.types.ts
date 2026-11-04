@@ -18,6 +18,7 @@ export const ImageTargetType = {
   REVIEW: 'REVIEW',
   REFUND: 'REFUND',
   CHAT: 'CHAT',
+  TRAINING_SESSION_EVIDENCE: 'TRAINING_SESSION_EVIDENCE',
 } as const;
 
 export type ImageTargetType = (typeof ImageTargetType)[keyof typeof ImageTargetType];

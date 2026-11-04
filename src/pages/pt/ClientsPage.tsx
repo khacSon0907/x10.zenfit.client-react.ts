@@ -16,7 +16,7 @@ import {
 import { useApp } from '../../context/AppContext';
 import type {
   ClientStatus,
-  FitnessGoal,
+  // FitnessGoal
 } from '../../types/client.types';
 import {
   CLIENT_STATUS_LABELS,
@@ -34,7 +34,7 @@ export default function ClientsPage() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | ClientStatus>('ALL');
-  const [goalFilter, setGoalFilter] = useState<'ALL' | FitnessGoal>('ALL');
+  // goal filter removed
 
   // Tự động tải lại dữ liệu khi trang mount nếu danh sách rỗng
   useEffect(() => {
@@ -49,7 +49,7 @@ export default function ClientsPage() {
         return false;
       }
       // Lọc theo mục tiêu
-      if (goalFilter !== 'ALL' && c.fitnessGoal !== goalFilter) {
+      if (false) {
         return false;
       }
       // Lọc theo từ khóa tìm kiếm
@@ -64,7 +64,7 @@ export default function ClientsPage() {
       }
       return true;
     });
-  }, [clients, statusFilter, goalFilter, searchQuery]);
+  }, [clients, statusFilter, searchQuery]);
 
   // Thống kê nhanh
   const stats = useMemo(() => {

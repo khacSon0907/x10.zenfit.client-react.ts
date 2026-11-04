@@ -23,11 +23,20 @@ import {
   Plus,
   AlertCircle,
   X,
+  Calculator,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { contractApi } from '../../api/contractApi';
 import { useAuth } from '../../context/AuthContext';
 import { useApp } from '../../context/AppContext';
+import PaymentStatusBadge from '../../components/contracts/PaymentStatusBadge';
+import type {
+  CreatePtContractRequest,
+  PaymentContractStatus,
+} from '../../types/contract.types';
+import {
+  PAYMENT_CONTRACT_STATUS_CONFIG,
+} from '../../types/contract.types';
 import {
   CLIENT_STATUS_LABELS,
   FITNESS_GOAL_LABELS,
@@ -65,8 +74,65 @@ export default function CreatePtContractPage() {
   const [startDate, setStartDate] = useState<string>(todayStr);
   const [endDate, setEndDate] = useState<string>(defaultEndDateStr);
   const [price, setPrice] = useState<number>(12000000);
+  const [pricePerSession, setPricePerSession] = useState<number>(500000);
   const [paidAmount, setPaidAmount] = useState<number>(12000000);
+  const [paymentContractStatus, setPaymentContractStatus] =
+    useState<PaymentContractStatus>('PAID');
   const [notes, setNotes] = useState<string>('');
+
+  // Tự động tính đơn giá 1 buổi gợi ý nếu có price & totalSessions
+  const autoPricePerSession = useMemo(() => {
+    if (totalSessions > 0 && price > 0) {
+      return Math.round(price / totalSessions);
+    }
+    return 0;
+  }, [price, totalSessions]);
+
+  // Xử lý khi đổi đơn giá 1 buổi tập -> tự động tính tổng giá gói = đơn giá * số buổi mua
+  const handlePricePerSessionChange = (newPricePerSession: number) => {
+    setPricePerSession(newPricePerSession);
+    const calculatedPrice = (totalSessions > 0 ? totalSessions : 1) * newPricePerSession;
+    setPrice(calculatedPrice);
+
+    if (paidAmount === price || paymentContractStatus === 'PAID') {
+      setPaidAmount(calculatedPrice);
+      setPaymentContractStatus(calculatedPrice > 0 ? 'PAID' : 'UNPAID');
+    } else if (paidAmount > calculatedPrice) {
+      setPaidAmount(calculatedPrice);
+      setPaymentContractStatus('PAID');
+    } else if (paidAmount > 0) {
+      setPaymentContractStatus('PARTIALLY_PAID');
+    }
+  };
+
+  // Xử lý khi đổi tổng giá gói tập -> cập nhật ngược lại đơn giá 1 buổi
+  const handlePriceChange = (newPrice: number) => {
+    setPrice(newPrice);
+    if (totalSessions > 0) {
+      setPricePerSession(Math.round(newPrice / totalSessions));
+    }
+    if (paidAmount === price || paymentContractStatus === 'PAID') {
+      setPaidAmount(newPrice);
+      setPaymentContractStatus(newPrice > 0 ? 'PAID' : 'UNPAID');
+    } else if (paidAmount > newPrice) {
+      setPaidAmount(newPrice);
+      setPaymentContractStatus('PAID');
+    } else if (paidAmount > 0) {
+      setPaymentContractStatus('PARTIALLY_PAID');
+    }
+  };
+
+  // Xử lý tự động trạng thái thanh toán khi đổi paidAmount
+  const handlePaidAmountChange = (newPaid: number) => {
+    setPaidAmount(newPaid);
+    if (newPaid >= price && price > 0) {
+      setPaymentContractStatus('PAID');
+    } else if (newPaid > 0 && newPaid < price) {
+      setPaymentContractStatus('PARTIALLY_PAID');
+    } else {
+      setPaymentContractStatus('UNPAID');
+    }
+  };
 
   // Form states - Section 2: Thông tin bổ sung (đồng bộ từ học viên)
   const [height, setHeight] = useState<string>('');
@@ -139,7 +205,7 @@ export default function CreatePtContractPage() {
     );
   }, [clients, clientSearchQuery]);
 
-  // Tự động tính ngày hết hạn dựa trên số buổi và ngày bắt đầu (gợi ý thông minh)
+  // Tự động tính ngày hết hạn và tổng giá gói khi số buổi mua thay đổi
   const handleSessionsChange = (val: number) => {
     setTotalSessions(val);
     if (startDate) {
@@ -153,12 +219,21 @@ export default function CreatePtContractPage() {
       d.setMonth(d.getMonth() + monthsToAdd);
       setEndDate(d.toISOString().split('T')[0]);
     }
+    // Tự động tính lại tổng giá gói = số buổi mua * đơn giá 1 buổi
+    if (pricePerSession > 0) {
+      const calculatedPrice = val * pricePerSession;
+      setPrice(calculatedPrice);
+      if (paidAmount === price || paymentContractStatus === 'PAID') {
+        setPaidAmount(calculatedPrice);
+        setPaymentContractStatus(calculatedPrice > 0 ? 'PAID' : 'UNPAID');
+      }
+    }
   };
 
-  // Format tiền tệ VND
+  // Format tiền tệ VND chuẩn (phân tách hàng nghìn bằng dấu chấm + VNĐ)
   const formatVND = (amount?: number) => {
-    if (amount === undefined || amount === null || isNaN(amount)) return '—';
-    return new Intl.NumberFormat('vi-VN').format(amount) + ' đ';
+    if (amount === undefined || amount === null || isNaN(amount)) return '0 VNĐ';
+    return new Intl.NumberFormat('vi-VN').format(amount) + ' VNĐ';
   };
 
   // Format ngày dd/mm/yyyy
@@ -181,7 +256,9 @@ export default function CreatePtContractPage() {
     setStartDate(todayStr);
     setEndDate(defaultEndDateStr);
     setPrice(12000000);
+    setPricePerSession(500000);
     setPaidAmount(12000000);
+    setPaymentContractStatus('PAID');
     setNotes('');
     setHeight('');
     setWeight('');
@@ -285,7 +362,7 @@ export default function CreatePtContractPage() {
 
     setIsSubmitting(true);
     try {
-      const payload = {
+      const payload: CreatePtContractRequest = {
         clientId: clientId.trim(),
         trainerId: finalTrainerId,
         totalSessions,
@@ -293,7 +370,9 @@ export default function CreatePtContractPage() {
         startDate,
         endDate,
         price,
+        pricePerSession: pricePerSession > 0 ? pricePerSession : autoPricePerSession,
         paidAmount: safePaid,
+        paymentContractStatus,
         notes: combinedNotes || undefined,
       };
 
@@ -325,6 +404,8 @@ export default function CreatePtContractPage() {
       setIsSubmitting(false);
     }
   };
+
+  const remainingDebt = Math.max(0, price - paidAmount);
 
   return (
     <div className="space-y-6 pb-16 animate-in fade-in duration-200">
@@ -658,13 +739,55 @@ export default function CreatePtContractPage() {
                   </div>
                 </div>
 
-                {/* 7. Giá gói tập (VND) * */}
+                {/* 7a. Đơn giá 1 buổi tập (VND) - Nằm trước Tổng giá gói tập */}
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                      Giá gói tập (VND) <span className="text-rose-500">*</span>
+                      Đơn giá / buổi (VNĐ) <span className="text-rose-500">*</span>
                     </label>
-                    <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                    <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md border border-emerald-500/20">
+                      {formatVND(pricePerSession)} / buổi
+                    </span>
+                  </div>
+                  <div className="relative">
+                    <Coins className="h-4 w-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                      type="number"
+                      step={10000}
+                      min={0}
+                      value={pricePerSession || ''}
+                      onChange={(e) => handlePricePerSessionChange(parseFloat(e.target.value) || 0)}
+                      placeholder="Nhập giá 1 buổi (VD: 350000)"
+                      className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-850/60 border border-slate-200 dark:border-slate-700/80 text-xs sm:text-sm text-slate-900 dark:text-white font-medium outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 transition-all"
+                    />
+                  </div>
+                  {/* Gợi ý mức giá theo buổi phổ biến */}
+                  <div className="flex items-center gap-1 pt-0.5 overflow-x-auto custom-scrollbar">
+                    <span className="text-[10px] text-slate-400 shrink-0">Mức giá:</span>
+                    {[250000, 300000, 350000, 400000, 500000].map((preset) => (
+                      <button
+                        key={preset}
+                        type="button"
+                        onClick={() => handlePricePerSessionChange(preset)}
+                        className={`text-[10px] px-1.5 py-0.5 rounded-md font-semibold transition-colors cursor-pointer shrink-0 ${
+                          pricePerSession === preset
+                            ? 'bg-emerald-600 text-white'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
+                        }`}
+                      >
+                        {preset / 1000}k
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 7b. Tổng giá gói tập (VND) - Tự động tính = Đơn giá * Số buổi mua */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                      Tổng giá gói tập (VNĐ) <span className="text-rose-500">*</span>
+                    </label>
+                    <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md border border-emerald-500/20">
                       {formatVND(price)}
                     </span>
                   </div>
@@ -672,20 +795,20 @@ export default function CreatePtContractPage() {
                     <Coins className="h-4 w-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input
                       type="number"
-                      step={100000}
-                      min={100000}
+                      step={50000}
+                      min={0}
                       value={price || ''}
-                      onChange={(e) => {
-                        const val = parseFloat(e.target.value) || 0;
-                        setPrice(val);
-                        // Tự động cập nhật nếu trước đó đang là thanh toán 100%
-                        if (paidAmount === price) {
-                          setPaidAmount(val);
-                        }
-                      }}
-                      placeholder="Nhập giá gói tập"
+                      onChange={(e) => handlePriceChange(parseFloat(e.target.value) || 0)}
+                      placeholder="Tổng giá trị gói tập"
                       className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-850/60 border border-slate-200 dark:border-slate-700/80 text-xs sm:text-sm text-slate-900 dark:text-white font-medium outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 transition-all"
                     />
+                  </div>
+                  {/* Hiển thị công thức nhân trực quan */}
+                  <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 bg-emerald-50/50 dark:bg-emerald-950/20 px-2.5 py-1 rounded-lg border border-emerald-500/20">
+                    <Calculator className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    <span className="truncate">
+                      = <strong>{totalSessions}</strong> buổi × <strong>{formatVND(pricePerSession)}</strong> = <strong className="text-emerald-600 dark:text-emerald-400 font-bold">{formatVND(price)}</strong>
+                    </span>
                   </div>
                 </div>
 
@@ -693,29 +816,29 @@ export default function CreatePtContractPage() {
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                      Số tiền đã thanh toán (VND) <span className="text-rose-500">*</span>
+                      Số tiền đã thanh toán (VNĐ) <span className="text-rose-500">*</span>
                     </label>
                     <div className="flex items-center gap-1">
                       <button
                         type="button"
-                        onClick={() => setPaidAmount(price)}
+                        onClick={() => handlePaidAmountChange(price)}
                         className="text-[10px] px-1.5 py-0.5 rounded-md font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 hover:bg-emerald-100 transition-colors cursor-pointer"
                       >
                         100%
                       </button>
                       <button
                         type="button"
-                        onClick={() => setPaidAmount(Math.round(price * 0.5))}
+                        onClick={() => handlePaidAmountChange(Math.round(price * 0.5))}
                         className="text-[10px] px-1.5 py-0.5 rounded-md font-semibold bg-amber-50 dark:bg-amber-950/40 text-amber-600 hover:bg-amber-100 transition-colors cursor-pointer"
                       >
                         50%
                       </button>
                       <button
                         type="button"
-                        onClick={() => setPaidAmount(0)}
+                        onClick={() => handlePaidAmountChange(0)}
                         className="text-[10px] px-1.5 py-0.5 rounded-md font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 hover:bg-slate-200 transition-colors cursor-pointer"
                       >
-                        0đ
+                        0 VNĐ
                       </button>
                     </div>
                   </div>
@@ -727,11 +850,47 @@ export default function CreatePtContractPage() {
                       min={0}
                       max={price}
                       value={paidAmount}
-                      onChange={(e) => setPaidAmount(parseFloat(e.target.value) || 0)}
+                      onChange={(e) => handlePaidAmountChange(parseFloat(e.target.value) || 0)}
                       placeholder="Nhập số tiền đã thanh toán"
                       className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-850/60 border border-slate-200 dark:border-slate-700/80 text-xs sm:text-sm text-slate-900 dark:text-white font-medium outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 transition-all"
                     />
                   </div>
+                  <div className="flex items-center justify-between text-[11px] font-medium pt-0.5">
+                    <span className="text-slate-500 dark:text-slate-400">
+                      Đã đóng: <strong className="text-emerald-600 dark:text-emerald-400 font-bold">{formatVND(paidAmount)}</strong>
+                    </span>
+                    {remainingDebt > 0 ? (
+                      <span className="text-rose-500 font-semibold">Còn nợ: {formatVND(remainingDebt)}</span>
+                    ) : (
+                      <span className="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-0.5">
+                        <Check className="h-3 w-3" /> Đã đóng đủ
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* 8b. Trạng thái thanh toán (PaymentContractStatus) */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                      Trạng thái thanh toán <span className="text-rose-500">*</span>
+                    </label>
+                    <PaymentStatusBadge status={paymentContractStatus} paidAmount={paidAmount} price={price} />
+                  </div>
+                  <select
+                    value={paymentContractStatus}
+                    onChange={(e) => setPaymentContractStatus(e.target.value as PaymentContractStatus)}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-850/60 border border-slate-200 dark:border-slate-700/80 text-xs sm:text-sm text-slate-900 dark:text-white font-semibold outline-none focus:border-emerald-500 cursor-pointer"
+                  >
+                    {(Object.keys(PAYMENT_CONTRACT_STATUS_CONFIG) as PaymentContractStatus[]).map((st) => (
+                      <option key={st} value={st}>
+                        {PAYMENT_CONTRACT_STATUS_CONFIG[st].label}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500 pt-0.5">
+                    Tự động đồng bộ theo số tiền đã thanh toán hoặc tuỳ chỉnh thủ công.
+                  </p>
                 </div>
 
                 {/* 9. Trạng thái hợp đồng * */}
@@ -986,8 +1145,15 @@ export default function CreatePtContractPage() {
                 </div>
 
                 <div className="flex items-center justify-between py-1 border-b border-slate-100 dark:border-slate-800/80">
-                  <span className="text-slate-500 dark:text-slate-400">Giá gói tập</span>
-                  <span className="font-bold text-slate-900 dark:text-white">
+                  <span className="text-slate-500 dark:text-slate-400">Đơn giá / buổi</span>
+                  <span className="font-semibold text-slate-700 dark:text-slate-300">
+                    {formatVND(pricePerSession || autoPricePerSession)}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between py-1 border-b border-slate-100 dark:border-slate-800/80">
+                  <span className="text-slate-500 dark:text-slate-400">Tổng giá gói tập</span>
+                  <span className="font-bold text-emerald-600 dark:text-emerald-400">
                     {formatVND(price)}
                   </span>
                 </div>
@@ -997,6 +1163,11 @@ export default function CreatePtContractPage() {
                   <span className="font-bold text-emerald-600 dark:text-emerald-400">
                     {formatVND(paidAmount)}
                   </span>
+                </div>
+
+                <div className="flex items-center justify-between py-1 border-b border-slate-100 dark:border-slate-800/80">
+                  <span className="text-slate-500 dark:text-slate-400">Tình trạng thu</span>
+                  <PaymentStatusBadge status={paymentContractStatus} paidAmount={paidAmount} price={price} />
                 </div>
 
                 <div className="flex items-center justify-between py-1">

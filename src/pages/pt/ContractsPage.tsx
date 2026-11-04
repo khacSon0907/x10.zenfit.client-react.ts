@@ -13,7 +13,7 @@ import {
   Trash2,
   Phone,
   Eye,
-  CheckCircle2,
+  Edit3,
   Clock,
   ChevronRight,
   TrendingUp,
@@ -22,16 +22,20 @@ import { toast } from 'sonner';
 import { contractApi } from '../../api/contractApi';
 import { useAuth } from '../../context/AuthContext';
 import { useApp } from '../../context/AppContext';
+import PaymentStatusBadge from '../../components/contracts/PaymentStatusBadge';
+import UpdatePtContractModal from '../../components/contracts/UpdatePtContractModal';
 import type {
   PtContractResponse,
   ContractStatus,
-} from '../../types/client.types';
+  PaymentContractStatus,
+} from '../../types/contract.types';
 import {
   CONTRACT_STATUS_LABELS,
-} from '../../types/client.types';
+  resolvePaymentStatus,
+} from '../../types/contract.types';
 
 // Các lựa chọn lọc thanh toán
-type PaymentFilterType = 'ALL' | 'PAID' | 'PARTIAL' | 'UNPAID';
+type PaymentFilterType = 'ALL' | PaymentContractStatus;
 
 export default function ContractsPage() {
   const { user: authUser } = useAuth();
@@ -45,6 +49,9 @@ export default function ContractsPage() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | ContractStatus>('ALL');
   const [paymentFilter, setPaymentFilter] = useState<PaymentFilterType>('ALL');
+
+  // Modal cập nhật hợp đồng PT
+  const [editingContract, setEditingContract] = useState<PtContractResponse | null>(null);
 
   // Modal xác nhận xoá hợp đồng
   const [deletingContractId, setDeletingContractId] = useState<string | null>(null);
@@ -107,10 +114,10 @@ export default function ContractsPage() {
     }
   };
 
-  // Format tiền tệ VNĐ
+  // Format tiền tệ VNĐ chuẩn
   const formatVND = (amount?: number) => {
-    if (amount === undefined || amount === null || isNaN(amount)) return '0 đ';
-    return new Intl.NumberFormat('vi-VN').format(amount) + ' đ';
+    if (amount === undefined || amount === null || isNaN(amount)) return '0 VNĐ';
+    return new Intl.NumberFormat('vi-VN').format(amount) + ' VNĐ';
   };
 
   // Format ngày dd/mm/yyyy
@@ -182,11 +189,10 @@ export default function ContractsPage() {
       }
 
       // 2. Lọc theo tình trạng thanh toán
-      const price = contract.price || 0;
-      const paid = contract.paidAmount || 0;
-      if (paymentFilter === 'PAID' && paid < price) return false;
-      if (paymentFilter === 'PARTIAL' && (paid <= 0 || paid >= price)) return false;
-      if (paymentFilter === 'UNPAID' && paid > 0) return false;
+      if (paymentFilter !== 'ALL') {
+        const resolvedSt = resolvePaymentStatus(contract);
+        if (resolvedSt !== paymentFilter) return false;
+      }
 
       // 3. Tìm kiếm từ khóa (tên học viên, sđt, ghi chú, mã hợp đồng)
       if (searchQuery.trim()) {
@@ -355,12 +361,13 @@ export default function ContractsPage() {
             <select
               value={paymentFilter}
               onChange={(e) => setPaymentFilter(e.target.value as PaymentFilterType)}
-              className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-850/60 border border-slate-200 dark:border-slate-700/80 text-xs text-slate-800 dark:text-slate-200 outline-none focus:border-emerald-500 cursor-pointer"
+              className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-850/60 border border-slate-200 dark:border-slate-700/80 text-xs text-slate-800 dark:text-slate-200 outline-none focus:border-emerald-500 cursor-pointer font-medium"
             >
               <option value="ALL">Mọi trạng thái thanh toán</option>
-              <option value="PAID">Đã thanh toán đủ (100%)</option>
-              <option value="PARTIAL">Còn nợ / Thanh toán 1 phần</option>
-              <option value="UNPAID">Chưa thanh toán (0đ)</option>
+              <option value="PAID">Đã thanh toán đủ (PAID)</option>
+              <option value="PARTIALLY_PAID">Thanh toán 1 phần (PARTIALLY_PAID)</option>
+              <option value="UNPAID">Chưa thanh toán (UNPAID)</option>
+              <option value="REFUNDED">Đã hoàn tiền (REFUNDED)</option>
             </select>
           </div>
         </div>
@@ -475,8 +482,6 @@ export default function ContractsPage() {
 
               const price = contract.price || 0;
               const paid = contract.paidAmount || 0;
-              const isFullyPaid = paid >= price;
-              const isUnpaid = paid === 0;
               const debt = Math.max(0, price - paid);
 
               const daysRemaining = getDaysRemaining(contract.endDate);
@@ -509,7 +514,7 @@ export default function ContractsPage() {
                       <div>
                         <div className="flex items-center gap-2">
                           <Link
-                            to={`/pt/clients/${contract.clientId}`}
+                            to={`/pt/contracts/${contract.id}`}
                             className="font-bold text-sm sm:text-base text-slate-900 dark:text-white hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors inline-flex items-center gap-1 group"
                           >
                             <span>{clientName}</span>
@@ -541,13 +546,23 @@ export default function ContractsPage() {
                     {/* Actions */}
                     <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
                       <Link
-                        to={`/pt/clients/${contract.clientId}`}
-                        title="Xem hồ sơ học viên"
+                        to={`/pt/contracts/${contract.id}`}
+                        title="Xem chi tiết hợp đồng"
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold transition-colors cursor-pointer"
                       >
                         <Eye className="h-3.5 w-3.5" />
-                        <span>Xem hồ sơ</span>
+                        <span>Xem chi tiết</span>
                       </Link>
+
+                      <button
+                        type="button"
+                        onClick={() => setEditingContract(contract)}
+                        title="Cập nhật hợp đồng này"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-xs font-semibold transition-colors cursor-pointer"
+                      >
+                        <Edit3 className="h-3.5 w-3.5" />
+                        <span>Cập nhật</span>
+                      </button>
 
                       <button
                         type="button"
@@ -632,6 +647,19 @@ export default function ContractsPage() {
                         </span>
                       </div>
 
+                      {/* Đơn giá / buổi */}
+                      <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
+                        <span>Đơn giá / buổi:</span>
+                        <span className="font-semibold text-slate-700 dark:text-slate-300">
+                          {formatVND(
+                            contract.pricePerSession ||
+                              (contract.totalSessions > 0
+                                ? Math.round(price / contract.totalSessions)
+                                : 0)
+                          )}
+                        </span>
+                      </div>
+
                       <div className="flex items-center justify-between text-slate-700 dark:text-slate-300">
                         <span>Đã thanh toán:</span>
                         <span className="font-semibold text-emerald-600 dark:text-emerald-400">
@@ -640,19 +668,14 @@ export default function ContractsPage() {
                       </div>
 
                       <div className="flex items-center justify-between pt-0.5">
-                        {isFullyPaid ? (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                            <CheckCircle2 className="h-3 w-3" />
-                            <span>Đã thanh toán đủ</span>
-                          </span>
-                        ) : isUnpaid ? (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 px-2 py-0.5 rounded-full border border-rose-500/20">
-                            <AlertCircle className="h-3 w-3" />
-                            <span>Chưa thanh toán (0đ)</span>
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-full border border-amber-500/20">
-                            <span>Còn nợ: {formatVND(debt)}</span>
+                        <PaymentStatusBadge
+                          status={contract.paymentContractStatus}
+                          paidAmount={paid}
+                          price={price}
+                        />
+                        {debt > 0 && (
+                          <span className="text-[11px] font-semibold text-rose-500">
+                            Nợ: {formatVND(debt)}
                           </span>
                         )}
                       </div>
@@ -723,6 +746,14 @@ export default function ContractsPage() {
           </div>
         </div>
       )}
+
+      {/* Modal cập nhật hợp đồng PT */}
+      <UpdatePtContractModal
+        contract={editingContract}
+        isOpen={!!editingContract}
+        onClose={() => setEditingContract(null)}
+        onSuccess={loadContracts}
+      />
     </div>
   );
 }

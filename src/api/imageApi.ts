@@ -5,7 +5,7 @@ import type {
   ImageSignatureResponse,
   ImageTargetType,
 } from '../types/image.types';
-import { uploadImageToCloudinary } from '../services/imageService';
+import { uploadImageToCloudinary, uploadEvidenceImages } from '../services/imageService';
 
 /**
  * ============================================================================
@@ -64,9 +64,20 @@ export const imageApi = {
     const uploadRes = await uploadImageToCloudinary(file, 'CLIENT_BODY_PHOTO', { onProgress });
     return uploadRes.secure_url;
   },
+
+  /**
+   * Upload nhiều ảnh minh chứng buổi tập (TRAINING_SESSION_EVIDENCE) lên Cloudinary
+   */
+  uploadEvidenceImages: async (
+    files: File[],
+    onProgress?: (percent: number) => void
+  ): Promise<string[]> => {
+    return uploadEvidenceImages(files, onProgress);
+  },
 };
 
 export const getImageSignature = imageApi.getSignature;
 export const uploadClientAvatar = imageApi.uploadClientAvatar;
 export const uploadClientBodyPhoto = imageApi.uploadClientBodyPhoto;
+export const uploadEvidenceImagesApi = imageApi.uploadEvidenceImages;
 export default imageApi;

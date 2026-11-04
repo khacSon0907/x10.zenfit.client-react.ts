@@ -197,11 +197,46 @@ export async function uploadAvatarToCloudinary(
   return result.secure_url;
 }
 
+/**
+ * Upload danh sách nhiều ảnh minh chứng buổi tập lên Cloudinary
+ * @param files Danh sách File ảnh
+ * @param onProgress Callback tiến độ
+ * @returns Mảng URL công khai (secure_url)
+ */
+export async function uploadEvidenceImages(
+  files: File[],
+  onProgress?: (percent: number) => void
+): Promise<string[]> {
+  if (!files || files.length === 0) return [];
+
+  for (const file of files) {
+    const check = validateImageFile(file);
+    if (!check.valid) {
+      throw new Error(check.error || `File "${file.name}" không hợp lệ`);
+    }
+  }
+
+  let completedCount = 0;
+  const total = files.length;
+
+  const uploadPromises = files.map(async (file) => {
+    const url = await uploadImage(file, 'TRAINING_SESSION_EVIDENCE');
+    completedCount++;
+    if (onProgress) {
+      onProgress(Math.round((completedCount / total) * 100));
+    }
+    return url;
+  });
+
+  return Promise.all(uploadPromises);
+}
+
 export const imageService = {
   validateFile: validateImageFile,
   formatErrorMessage: formatUploadErrorMessage,
   uploadToCloudinary: uploadImageToCloudinary,
   uploadAvatarToCloudinary,
+  uploadEvidenceImages,
   uploadImage,
 };
 

@@ -7,6 +7,7 @@
 @theme {
   --font-sans: 'Plus Jakarta Sans', 'Be Vietnam Pro', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-poppins: 'Plus Jakarta Sans', 'Be Vietnam Pro', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --color-slate-850: #0f1c2e;
 }
 
 html {
@@ -17,4 +18,55 @@ body {
   font-family: 'Plus Jakarta Sans', 'Be Vietnam Pro', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================================================
+   Training Session Status Classes (Mapping Java Enum -> Frontend classes)
+   SCHEDULED: Blue (#2563EB, Dark #1E3A5F)
+   COMPLETED: Emerald (#10B981, Dark #064E3B)
+   CANCELLED: Red (#EF4444, Dark #7F1D1D)
+   NO_SHOW:   Amber (#F59E0B, Dark #78350F)
+   ============================================================================ */
+.status-scheduled {
+  color: #1D4ED8;
+  background-color: #EFF6FF;
+  border: 1px solid #BFDBFE;
+}
+:is(.dark, .dark *) .status-scheduled {
+  color: #60A5FA;
+  background-color: #1E3A5F;
+  border: 1px solid #2563EB;
+}
+
+.status-completed {
+  color: #047857;
+  background-color: #ECFDF5;
+  border: 1px solid #A7F3D0;
+}
+:is(.dark, .dark *) .status-completed {
+  color: #34D399;
+  background-color: #064E3B;
+  border: 1px solid #10B981;
+}
+
+.status-cancelled {
+  color: #B91C1C;
+  background-color: #FEF2F2;
+  border: 1px solid #FECACA;
+}
+:is(.dark, .dark *) .status-cancelled {
+  color: #F87171;
+  background-color: #7F1D1D;
+  border: 1px solid #EF4444;
+}
+
+.status-no-show {
+  color: #B45309;
+  background-color: #FFFBEB;
+  border: 1px solid #FDE68A;
+}
+:is(.dark, .dark *) .status-no-show {
+  color: #FBBF24;
+  background-color: #78350F;
+  border: 1px solid #F59E0B;
 }

@@ -1,0 +1,463 @@
+openapi: 3.0.3
+info:
+  title: ZenFit Training Sessions & PT Calendar API
+  version: 1.0.0
+  description: API endpoints for managing personal training sessions, real-time attendance, and PT calendar views.
+paths:
+  /api/training-sessions:
+    post:
+      summary: Create a new training session
+      operationId: createTrainingSession
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTrainingSessionRequest'
+      responses:
+        '201':
+          description: Session created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrainingSessionApiResponse'
+        '400':
+          description: Invalid request parameters or contract inactive
+        '409':
+          description: Conflict - Trainer or client already booked at this date and time
+    get:
+      summary: Get paginated and filtered list of training sessions
+      operationId: getAllTrainingSessions
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: trainerId
+          in: query
+          schema:
+            type: string
+        - name: clientId
+          in: query
+          schema:
+            type: string
+        - name: contractId
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/TrainingSessionStatus'
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Paginated sessions returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTrainingSessionApiResponse'
+
+  /api/training-sessions/calendar:
+    get:
+      summary: Retrieve training sessions aggregated for Calendar view (Day, Week, Month)
+      operationId: getTrainingSessionCalendar
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: view
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/CalendarViewType'
+        - name: date
+          in: query
+          required: true
+          description: Reference date in YYYY-MM-DD
+          schema:
+            type: string
+            format: date
+        - name: trainerId
+          in: query
+          schema:
+            type: string
+        - name: clientId
+          in: query
+          schema:
+            type: string
+        - name: contractId
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/TrainingSessionStatus'
+      responses:
+        '200':
+          description: Calendar data returned successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrainingSessionCalendarApiResponse'
+
+  /api/training-sessions/{id}:
+    get:
+      summary: Get single training session detail by ID
+      operationId: getTrainingSessionById
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Training session details returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrainingSessionApiResponse'
+        '404':
+          description: Training session not found
+    patch:
+      summary: Update training session details (date, time, notes)
+      operationId: updateTrainingSession
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTrainingSessionRequest'
+      responses:
+        '200':
+          description: Training session updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrainingSessionApiResponse'
+        '409':
+          description: Rescheduled time slot conflicts with another session
+
+  /api/training-sessions/{id}/check-in:
+    patch:
+      summary: Check-in attendance for a scheduled session
+      operationId: checkInTrainingSession
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Attendance checked in; status changed to CONFIRMED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrainingSessionApiResponse'
+
+  /api/training-sessions/{id}/complete:
+    patch:
+      summary: Mark training session as completed
+      operationId: completeTrainingSession
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Session marked as COMPLETED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrainingSessionApiResponse'
+
+  /api/training-sessions/{id}/no-show:
+    patch:
+      summary: Mark client as no-show for the training session
+      operationId: noShowTrainingSession
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Session marked as NO_SHOW
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrainingSessionApiResponse'
+
+  /api/training-sessions/{id}/cancel:
+    patch:
+      summary: Cancel the training session
+      operationId: cancelTrainingSession
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Session marked as CANCELLED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrainingSessionApiResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    TrainingSessionStatus:
+      type: string
+      enum: [SCHEDULED, CONFIRMED, COMPLETED, CANCELLED, NO_SHOW]
+
+    CalendarViewType:
+      type: string
+      enum: [DAY, WEEK, MONTH]
+
+    TrainingSession:
+      type: object
+      properties:
+        id:
+          type: string
+        clientId:
+          type: string
+        trainerId:
+          type: string
+        contractId:
+          type: string
+        sessionName:
+          type: string
+        trainingDate:
+          type: string
+          format: date
+        startTime:
+          type: string
+          example: '09:00:00'
+        status:
+          $ref: '#/components/schemas/TrainingSessionStatus'
+        checkInAt:
+          type: string
+          nullable: true
+        completedAt:
+          type: string
+          nullable: true
+        note:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    TrainingSessionCalendarItem:
+      type: object
+      properties:
+        id:
+          type: string
+        clientId:
+          type: string
+        trainerId:
+          type: string
+        contractId:
+          type: string
+        sessionName:
+          type: string
+        trainingDate:
+          type: string
+          format: date
+        startTime:
+          type: string
+        status:
+          $ref: '#/components/schemas/TrainingSessionStatus'
+        note:
+          type: string
+          nullable: true
+
+    TrainingSessionCalendarResponse:
+      type: object
+      properties:
+        view:
+          $ref: '#/components/schemas/CalendarViewType'
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        totalSessions:
+          type: integer
+        sessions:
+          type: array
+          items:
+            $ref: '#/components/schemas/TrainingSessionCalendarItem'
+
+    CreateTrainingSessionRequest:
+      type: object
+      required:
+        - clientId
+        - contractId
+        - sessionName
+        - trainingDate
+        - startTime
+      properties:
+        clientId:
+          type: string
+        trainerId:
+          type: string
+        contractId:
+          type: string
+        sessionName:
+          type: string
+        trainingDate:
+          type: string
+          format: date
+        startTime:
+          type: string
+          example: '09:00:00'
+        note:
+          type: string
+
+    UpdateTrainingSessionRequest:
+      type: object
+      properties:
+        clientId:
+          type: string
+        trainerId:
+          type: string
+        contractId:
+          type: string
+        sessionName:
+          type: string
+        trainingDate:
+          type: string
+          format: date
+        startTime:
+          type: string
+          example: '09:00:00'
+        note:
+          type: string
+
+    TrainingSessionApiResponse:
+      type: object
+      properties:
+        type:
+          type: string
+          example: 'SUCCESS'
+        title:
+          type: string
+        status:
+          type: integer
+          example: 200
+        code:
+          type: string
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/TrainingSession'
+
+    TrainingSessionCalendarApiResponse:
+      type: object
+      properties:
+        type:
+          type: string
+          example: 'SUCCESS'
+        title:
+          type: string
+        status:
+          type: integer
+          example: 200
+        code:
+          type: string
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/TrainingSessionCalendarResponse'
+
+    PaginatedTrainingSessionResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TrainingSession'
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+        first:
+          type: boolean
+        last:
+          type: boolean
+
+    PaginatedTrainingSessionApiResponse:
+      type: object
+      properties:
+        type:
+          type: string
+          example: 'SUCCESS'
+        title:
+          type: string
+        status:
+          type: integer
+          example: 200
+        code:
+          type: string
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/PaginatedTrainingSessionResponse'
+
