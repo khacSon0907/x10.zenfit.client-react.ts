@@ -32,7 +32,7 @@ export function extractErrorResponse(error: unknown): ErrorResponse | null {
  */
 export function getFriendlyErrorMessage(
   error: unknown,
-  fallbackMessage = 'Đã có lỗi xảy ra. Vui lòng thử lại sau.'
+  fallbackMessage = 'Đã có lỗi xảy ra.vui long ktr '
 ): string {
   const errorData = extractErrorResponse(error);
   if (errorData?.code && AUTH_ERROR_MESSAGES[errorData.code]) {
