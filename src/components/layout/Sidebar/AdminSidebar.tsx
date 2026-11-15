@@ -1,18 +1,22 @@
+import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
-  LayoutDashboard,
+  TrendingUp,
+  Dumbbell,
   Users,
-  Layers,
+  Crown,
+  Calendar,
   CreditCard,
+  Settings,
+  BarChart2,
   History,
   LogOut,
-  UserCheck,
-  ShieldCheck,
-  ChevronLeft,
+  ChevronDown,
   ChevronRight,
+  ChevronLeft,
   X,
+  UserCheck,
 } from 'lucide-react';
-import logo from '../../../assets/logo/logo-zenfit.png';
 import { useApp } from '../../../context/AppContext';
 
 interface AdminSidebarProps {
@@ -28,57 +32,73 @@ export default function AdminSidebar({
 }: AdminSidebarProps) {
   const { user, logoutApp, loginAsPT } = useApp();
   const navigate = useNavigate();
+  const [isAdminDropdownOpen, setIsAdminDropdownOpen] = useState(false);
 
-  const navItems = [
-    { to: '/admin/overview', label: 'Tổng quan hệ thống', icon: LayoutDashboard },
-    { to: '/admin/pts', label: 'Quản lý HLV (PT)', icon: Users },
-    { to: '/admin/plans', label: 'Cấu hình gói thuê bao', icon: Layers },
-    { to: '/admin/payments', label: 'Thanh toán phí dịch vụ', icon: CreditCard },
-    { to: '/admin/audit-logs', label: 'Nhật ký thao tác', icon: History },
+  // Group 1: Standalone Overview
+  const overviewItem = {
+    to: '/admin/overview',
+    label: 'Tổng quan hệ thống',
+    icon: TrendingUp,
+  };
+
+  // Group 2: Quản lý nghiệp vụ
+  const businessItems = [
+    { to: '/admin/pts', label: 'Quản lý PT', icon: Dumbbell, hasArrow: true },
+    { to: '/admin/clients', label: 'Quản lý học viên', icon: Users },
+    { to: '/admin/plans', label: 'Quản lý gói đăng ký', icon: Crown },
+    { to: '/admin/schedule', label: 'Quản lý lịch tập', icon: Calendar },
+    { to: '/admin/payments', label: 'Quản lý thanh toán', icon: CreditCard },
+  ];
+
+  // Group 3: Hệ thống
+  const systemItems = [
+    { to: '/admin/settings', label: 'Cài đặt hệ thống', icon: Settings },
+    { to: '/admin/reports', label: 'Thống kê & Báo cáo', icon: BarChart2 },
+    { to: '/admin/audit-logs', label: 'Nhật ký hoạt động', icon: History },
   ];
 
   return (
     <aside
-      className={`bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-100 border-r border-slate-200 dark:border-slate-800 flex flex-col h-full select-none transition-all duration-300 ease-in-out ${
+      className={`bg-[#0c061a] text-slate-200 border-r border-purple-500/15 flex flex-col h-full select-none transition-all duration-300 ease-in-out ${
         isCollapsed ? 'w-20' : 'w-64'
       }`}
     >
       {/* Brand Header */}
       <div
-        className={`h-16 flex items-center border-b border-slate-200 dark:border-slate-800 shrink-0 transition-all ${
+        className={`h-18 flex items-center border-b border-purple-500/15 shrink-0 transition-all ${
           isCollapsed ? 'justify-center px-2' : 'justify-between px-5'
         }`}
       >
         <div className="flex items-center gap-3 min-w-0">
+          {/* Logo Icon with Purple Gradient Z */}
           <div
             onClick={isCollapsed && onToggleCollapse ? onToggleCollapse : undefined}
             title={isCollapsed ? 'Mở rộng menu' : undefined}
-            className={`h-9 w-9 rounded-xl bg-indigo-500/20 p-1 flex items-center justify-center border border-indigo-500/30 shrink-0 ${
+            className={`h-10 w-10 rounded-xl bg-gradient-to-tr from-violet-600 via-purple-600 to-indigo-500 flex items-center justify-center p-1 shadow-lg shadow-purple-600/30 shrink-0 ${
               isCollapsed && onToggleCollapse ? 'cursor-pointer hover:scale-105 transition-transform' : ''
             }`}
           >
-            <img src={logo} alt="ZenFit" className="h-7 w-7 object-contain" />
+            <span className="text-white font-black text-xl italic tracking-tighter">Z</span>
           </div>
 
           {!isCollapsed && (
             <div className="min-w-0">
-              <span className="text-lg font-bold tracking-tight text-slate-900 dark:text-white block leading-none">
-                Zen<span className="text-indigo-600 dark:text-indigo-400">Fit</span>
+              <span className="text-xl font-bold tracking-tight text-white block leading-none">
+                Zen<span className="text-purple-400">Fit</span>
               </span>
-              <span className="block text-[10px] font-semibold tracking-wider text-indigo-600 dark:text-indigo-400 uppercase mt-1 truncate">
-                Hệ Thống Quản Trị
+              <span className="block text-[9px] font-semibold tracking-wider text-purple-300/70 uppercase mt-1 truncate">
+                Train Better. Live Healthier.
               </span>
             </div>
           )}
         </div>
 
-        {/* Mobile Close Button */}
+        {/* Close Button on Mobile / Collapse on Desktop */}
         {onCloseMobile ? (
           <button
             onClick={onCloseMobile}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            className="p-1.5 rounded-xl text-purple-300 hover:text-white hover:bg-purple-900/30 transition-colors cursor-pointer"
             aria-label="Đóng menu"
-            title="Đóng menu"
           >
             <X className="h-5 w-5" />
           </button>
@@ -87,9 +107,8 @@ export default function AdminSidebar({
           onToggleCollapse && (
             <button
               onClick={onToggleCollapse}
-              className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-              aria-label="Thu gọn thanh điều hướng"
-              title="Thu gọn thanh điều hướng"
+              className="p-1.5 rounded-xl text-purple-400 hover:text-white hover:bg-purple-900/30 transition-colors cursor-pointer"
+              title="Thu gọn menu"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
@@ -97,145 +116,231 @@ export default function AdminSidebar({
         )}
       </div>
 
-      {/* Security Disclaimer Banner */}
+      {/* Admin User Profile Card (Under Header) */}
       {!isCollapsed ? (
-        <div className="mx-3 my-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed shrink-0">
-          <div className="flex items-center gap-1.5 font-semibold text-indigo-600 dark:text-indigo-400 mb-1">
-            <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
-            <span>Bảo mật dữ liệu học viên</span>
+        <div className="mx-3 mt-3 mb-2 p-2.5 rounded-2xl bg-[#170c33]/80 border border-purple-500/20 relative shadow-xs">
+          <div
+            onClick={() => setIsAdminDropdownOpen(!isAdminDropdownOpen)}
+            className="flex items-center justify-between cursor-pointer group"
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="h-9 w-9 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-500 text-white font-bold text-xs flex items-center justify-center shadow-md shadow-purple-600/30 shrink-0">
+                A
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-white truncate leading-tight group-hover:text-purple-300 transition-colors">
+                  {user?.name || 'Admin ZenFit'}
+                </p>
+                <p className="text-[10px] text-purple-300/60 truncate mt-0.5">Quản trị hệ thống</p>
+              </div>
+            </div>
+            <ChevronDown className={`h-3.5 w-3.5 text-purple-300/60 transition-transform ${isAdminDropdownOpen ? 'rotate-180' : ''}`} />
           </div>
-          Admin quản lý tài khoản & gói dịch vụ của PT. Dữ liệu khách hàng riêng tư của PT được mã hóa cách ly 100%.
+
+          {/* User Quick Switch Dropdown */}
+          {isAdminDropdownOpen && (
+            <div className="mt-2 pt-2 border-t border-purple-500/20 space-y-1">
+              <button
+                type="button"
+                onClick={() => {
+                  loginAsPT();
+                  navigate('/pt/today');
+                }}
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs text-emerald-400 hover:bg-emerald-950/40 rounded-lg transition-colors cursor-pointer"
+              >
+                <UserCheck className="h-3.5 w-3.5" />
+                <span>Xem giao diện PT</span>
+              </button>
+              <button
+                type="button"
+                onClick={logoutApp}
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs text-rose-400 hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer"
+              >
+                <LogOut className="h-3.5 w-3.5" />
+                <span>Đăng xuất</span>
+              </button>
+            </div>
+          )}
         </div>
       ) : (
         <div className="my-3 flex justify-center shrink-0">
           <div
-            className="h-9 w-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 group relative cursor-help"
+            onClick={onToggleCollapse}
+            title="Admin ZenFit"
+            className="h-10 w-10 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 text-white font-bold text-xs flex items-center justify-center shadow-md shadow-purple-600/30 cursor-pointer hover:scale-105 transition-transform"
           >
-            <ShieldCheck className="h-4 w-4" />
-            <div className="absolute left-full ml-3 px-2.5 py-1.5 rounded-lg bg-slate-900 dark:bg-slate-800 text-white text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 z-50 border border-slate-700/50">
-              Bảo mật: Dữ liệu học viên cách ly 100%
-            </div>
+            A
           </div>
         </div>
       )}
 
-      {/* Navigation Links */}
-      <div className="flex-1 overflow-y-auto py-2 px-3 space-y-1">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          return (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              onClick={onCloseMobile}
-              className={({ isActive }) =>
-                `group relative flex items-center ${
-                  isCollapsed ? 'justify-center p-2.5 rounded-xl' : 'gap-3 px-3.5 py-2.5 rounded-xl'
-                } text-sm font-medium transition-all ${
-                  isActive
-                    ? 'bg-indigo-600 text-white font-semibold shadow-xs shadow-indigo-600/30'
-                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                }`
-              }
-            >
-              <Icon className="h-4 w-4 shrink-0" />
-              {!isCollapsed && <span className="truncate">{item.label}</span>}
+      {/* Navigation List */}
+      <div className="flex-1 overflow-y-auto py-2 px-3 space-y-4 scrollbar-thin scrollbar-thumb-purple-900/40 scrollbar-track-transparent">
+        {/* SECTION 1: TỔNG QUAN HỆ THỐNG */}
+        <div>
+          <NavLink
+            to={overviewItem.to}
+            onClick={onCloseMobile}
+            className={({ isActive }) =>
+              `group relative flex items-center ${
+                isCollapsed ? 'justify-center p-3 rounded-xl' : 'gap-3 px-3.5 py-2.5 rounded-xl'
+              } text-xs font-semibold transition-all duration-150 ${
+                isActive
+                  ? 'bg-gradient-to-r from-violet-600 to-purple-600 text-white shadow-lg shadow-purple-600/30'
+                  : 'text-purple-200/70 hover:text-white hover:bg-purple-900/20'
+              }`
+            }
+          >
+            <overviewItem.icon className="h-4 w-4 shrink-0" />
+            {!isCollapsed && <span className="truncate">{overviewItem.label}</span>}
 
-              {/* Floating Tooltip when collapsed */}
-              {isCollapsed && (
-                <div className="absolute left-full ml-3 px-2.5 py-1.5 rounded-lg bg-slate-900 dark:bg-slate-800 text-white text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 z-50 border border-slate-700/50">
-                  {item.label}
+            {isCollapsed && (
+              <div className="absolute left-full ml-3 px-2.5 py-1.5 rounded-lg bg-[#160b2e] text-white text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 z-50 border border-purple-500/30">
+                {overviewItem.label}
+              </div>
+            )}
+          </NavLink>
+        </div>
+
+        {/* SECTION 2: QUẢN LÝ NGHIỆP VỤ */}
+        <div className="space-y-1">
+          {!isCollapsed && (
+            <p className="px-3 text-[10px] font-bold text-purple-300/40 uppercase tracking-wider mb-1.5">
+              Quản lý nghiệp vụ
+            </p>
+          )}
+          {businessItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                onClick={onCloseMobile}
+                className={({ isActive }) =>
+                  `group relative flex items-center ${
+                    isCollapsed ? 'justify-center p-3 rounded-xl' : 'justify-between px-3.5 py-2.5 rounded-xl'
+                  } text-xs font-medium transition-all duration-150 ${
+                    isActive
+                      ? 'bg-gradient-to-r from-violet-600 to-purple-600 text-white font-semibold shadow-lg shadow-purple-600/30'
+                      : 'text-purple-200/70 hover:text-white hover:bg-purple-900/20'
+                  }`
+                }
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <Icon className="h-4 w-4 shrink-0" />
+                  {!isCollapsed && <span className="truncate">{item.label}</span>}
                 </div>
-              )}
-            </NavLink>
-          );
-        })}
+
+                {!isCollapsed && item.hasArrow && (
+                  <ChevronRight className="h-3.5 w-3.5 opacity-60 shrink-0" />
+                )}
+
+                {isCollapsed && (
+                  <div className="absolute left-full ml-3 px-2.5 py-1.5 rounded-lg bg-[#160b2e] text-white text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 z-50 border border-purple-500/30">
+                    {item.label}
+                  </div>
+                )}
+              </NavLink>
+            );
+          })}
+        </div>
+
+        {/* SECTION 3: HỆ THỐNG */}
+        <div className="space-y-1">
+          {!isCollapsed && (
+            <p className="px-3 text-[10px] font-bold text-purple-300/40 uppercase tracking-wider mb-1.5">
+              Hệ thống
+            </p>
+          )}
+          {systemItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                onClick={onCloseMobile}
+                className={({ isActive }) =>
+                  `group relative flex items-center ${
+                    isCollapsed ? 'justify-center p-3 rounded-xl' : 'gap-3 px-3.5 py-2.5 rounded-xl'
+                  } text-xs font-medium transition-all duration-150 ${
+                    isActive
+                      ? 'bg-gradient-to-r from-violet-600 to-purple-600 text-white font-semibold shadow-lg shadow-purple-600/30'
+                      : 'text-purple-200/70 hover:text-white hover:bg-purple-900/20'
+                  }`
+                }
+              >
+                <Icon className="h-4 w-4 shrink-0" />
+                {!isCollapsed && <span className="truncate">{item.label}</span>}
+
+                {isCollapsed && (
+                  <div className="absolute left-full ml-3 px-2.5 py-1.5 rounded-lg bg-[#160b2e] text-white text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 z-50 border border-purple-500/30">
+                    {item.label}
+                  </div>
+                )}
+              </NavLink>
+            );
+          })}
+        </div>
       </div>
 
-      {/* User Info & Switch to PT */}
-      <div className="p-3 border-t border-slate-200 dark:border-slate-800 shrink-0">
+      {/* Bottom Motivational Mini-Card */}
+      {!isCollapsed && (
+        <div className="mx-3 my-2 p-3 rounded-2xl bg-gradient-to-br from-purple-900/30 via-purple-800/20 to-indigo-950/40 border border-purple-500/20 relative overflow-hidden flex items-center justify-between shrink-0">
+          <div>
+            <span className="font-bold text-xs text-white block">ZenFit</span>
+            <span className="text-[10px] text-purple-200/70 leading-tight block mt-0.5">
+              Build a stronger community together.
+            </span>
+          </div>
+          <div className="h-8 w-8 rounded-xl bg-purple-600/30 flex items-center justify-center text-purple-300 shrink-0">
+            <Dumbbell className="h-4 w-4" />
+          </div>
+        </div>
+      )}
+
+      {/* Bottom Section: Logout / Expand */}
+      <div className="p-3 border-t border-purple-500/15 shrink-0">
         {isCollapsed ? (
           <div className="flex flex-col items-center gap-2">
-            {/* Nút quay lại PT Workspace */}
-            <button
-              onClick={() => {
-                loginAsPT();
-                if (onCloseMobile) onCloseMobile();
-                navigate('/pt/today');
-              }}
-              title="Chuyển sang màn hình PT"
-              aria-label="Chuyển sang màn hình PT"
-              className="h-10 w-10 rounded-xl flex items-center justify-center text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-800/60 transition-colors cursor-pointer group relative"
-            >
-              <UserCheck className="h-4 w-4" />
-              <div className="absolute left-full ml-3 px-2.5 py-1.5 rounded-lg bg-slate-900 dark:bg-slate-800 text-white text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 z-50 border border-slate-700/50">
-                Chuyển sang màn hình PT
-              </div>
-            </button>
-
-            {/* Logout button */}
+            {/* Logout button in collapsed mode */}
             <button
               onClick={logoutApp}
               title="Đăng xuất"
               aria-label="Đăng xuất"
-              className="h-10 w-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer group relative"
+              className="h-10 w-10 rounded-xl flex items-center justify-center text-purple-300/60 hover:text-rose-400 hover:bg-rose-950/30 transition-colors cursor-pointer group relative"
             >
               <LogOut className="h-4 w-4" />
-              <div className="absolute left-full ml-3 px-2.5 py-1.5 rounded-lg bg-slate-900 dark:bg-slate-800 text-white text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 z-50 border border-slate-700/50">
+              <div className="absolute left-full ml-3 px-2.5 py-1.5 rounded-lg bg-[#160b2e] text-white text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 z-50 border border-purple-500/30">
                 Đăng xuất
               </div>
             </button>
 
-            {/* Expand button */}
+            {/* Expand button in collapsed mode */}
             {onToggleCollapse && (
               <button
                 onClick={onToggleCollapse}
-                className="h-10 w-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-purple-400 hover:text-white hover:bg-purple-900/30 transition-colors cursor-pointer"
                 title="Mở rộng menu"
-                aria-label="Mở rộng menu"
               >
                 <ChevronRight className="h-5 w-5" />
               </button>
             )}
           </div>
         ) : (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between px-2">
-              <div className="truncate">
-                <p className="text-xs font-semibold text-slate-900 dark:text-white truncate">
-                  {user?.name || 'Trần Quản Trị'}
-                </p>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">{user?.email}</p>
-              </div>
-              <button
-                onClick={logoutApp}
-                title="Đăng xuất"
-                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-              >
-                <LogOut className="h-4 w-4" />
-              </button>
-            </div>
-
-            {/* Nút quay lại PT Workspace */}
+          <div className="space-y-1">
             <button
-              onClick={() => {
-                loginAsPT();
-                if (onCloseMobile) onCloseMobile();
-                navigate('/pt/today');
-              }}
-              className="w-full flex items-center justify-center gap-1.5 py-2 px-2 text-xs font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-800/60 rounded-xl transition-colors cursor-pointer"
+              onClick={logoutApp}
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-slate-400 hover:text-rose-400 hover:bg-rose-950/20 rounded-xl transition-colors cursor-pointer"
             >
-              <UserCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-              Chuyển sang màn hình PT
+              <LogOut className="h-4 w-4" />
+              <span>Đăng xuất</span>
             </button>
 
-            {/* Collapse toggle button */}
             {onToggleCollapse && (
               <button
                 onClick={onToggleCollapse}
-                className="w-full flex items-center justify-center gap-2 py-1.5 px-3 rounded-xl text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                className="w-full flex items-center justify-center gap-2 py-1.5 px-3 rounded-xl text-xs font-medium text-purple-300/60 hover:text-white hover:bg-purple-900/30 transition-colors cursor-pointer"
                 title="Thu gọn menu"
-                aria-label="Thu gọn menu"
               >
                 <ChevronLeft className="h-4 w-4" />
                 <span>Thu gọn menu</span>

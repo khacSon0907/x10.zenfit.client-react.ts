@@ -10,9 +10,11 @@ import {
   AlertCircle,
   Loader2,
   CheckCircle2,
+  ClipboardList,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { trainingSessionApi } from '../../api/trainingSessionApi';
+import { trainerTaskApi } from '../../api/trainerTaskApi';
 import { clientApi } from '../../api/clientApi';
 import { contractApi } from '../../api/contractApi';
 import { useAuth } from '../../context/AuthContext';
@@ -50,6 +52,26 @@ const COMMON_TIME_PRESETS = [
   '20:00',
 ];
 
+const TASK_COLOR_OPTIONS = [
+  { label: 'Xanh lá', hex: '#10B981' },
+  { label: 'Xanh dương', hex: '#3B82F6' },
+  { label: 'Tím', hex: '#8B5CF6' },
+  { label: 'Hồng', hex: '#EC4899' },
+  { label: 'Cam', hex: '#F97316' },
+  { label: 'Vàng', hex: '#F59E0B' },
+  { label: 'Đỏ', hex: '#EF4444' },
+  { label: 'Xám', hex: '#64748B' },
+];
+
+const COMMON_TASK_PRESETS = [
+  'Thức dậy & Ăn sáng',
+  'Họp chuyên môn PT',
+  'Tự tập luyện (Workout)',
+  'Lên giáo án & Báo cáo',
+  'Nghỉ trưa & Hồi phục',
+  'Tư vấn học viên mới',
+];
+
 export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({
   isOpen,
   onClose,
@@ -58,6 +80,9 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({
   defaultTime = '09:00',
 }) => {
   const { user: authUser } = useAuth();
+
+  // Tab switcher: Lịch dạy học viên vs Hoạt động cá nhân
+  const [activeTab, setActiveTab] = useState<'SESSION' | 'TASK'>('SESSION');
 
   const [clients, setClients] = useState<ClientResponse[]>([]);
   const [isLoadingClients, setIsLoadingClients] = useState<boolean>(false);
@@ -88,6 +113,15 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({
   const [startTime, setStartTime] = useState<string>(defaultTime);
   const [endTime, setEndTime] = useState<string>(calculateDefaultEndTime(defaultTime));
   const [note, setNote] = useState<string>('');
+
+  // Form states cho Hoạt động cá nhân (Trainer Task)
+  const [taskTitle, setTaskTitle] = useState<string>('');
+  const [taskDate, setTaskDate] = useState<string>(defaultDate || formatIsoDate(new Date()));
+  const [taskAllDay, setTaskAllDay] = useState<boolean>(false);
+  const [taskStartTime, setTaskStartTime] = useState<string>(defaultTime || '07:00');
+  const [taskEndTime, setTaskEndTime] = useState<string>(calculateDefaultEndTime(defaultTime || '07:00'));
+  const [taskColor, setTaskColor] = useState<string>('#10B981');
+  const [taskDescription, setTaskDescription] = useState<string>('');
 
   const handleStartTimeChange = (newStartTime: string) => {
     setStartTime(newStartTime);
@@ -121,8 +155,15 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       setErrorMessage(null);
-      if (defaultDate) setTrainingDate(defaultDate);
-      if (defaultTime) setStartTime(defaultTime);
+      if (defaultDate) {
+        setTrainingDate(defaultDate);
+        setTaskDate(defaultDate);
+      }
+      if (defaultTime) {
+        setStartTime(defaultTime);
+        setTaskStartTime(defaultTime);
+        setTaskEndTime(calculateDefaultEndTime(defaultTime));
+      }
 
       const fetchClients = async () => {
         setIsLoadingClients(true);
@@ -290,6 +331,54 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({
     }
   };
 
+  // Submit tạo hoạt động cá nhân (Trainer Task)
+  const handleSubmitTask = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMessage(null);
+
+    if (!taskTitle.trim()) {
+      const err = 'Vui lòng nhập tiêu đề hoạt động';
+      setErrorMessage(err);
+      toast.error(err);
+      return;
+    }
+
+    if (!taskAllDay && taskEndTime && taskStartTime && taskEndTime <= taskStartTime) {
+      const err = 'Giờ kết thúc phải diễn ra sau giờ bắt đầu';
+      setErrorMessage(err);
+      toast.error(err);
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const formattedStartTime = taskStartTime.length === 5 ? `${taskStartTime}:00` : taskStartTime;
+      const formattedEndTime = taskEndTime.length === 5 ? `${taskEndTime}:00` : taskEndTime;
+
+      await trainerTaskApi.create({
+        title: taskTitle.trim(),
+        taskDate,
+        startTime: taskAllDay ? null : formattedStartTime,
+        endTime: taskAllDay ? null : formattedEndTime,
+        allDay: taskAllDay,
+        color: taskColor,
+        description: taskDescription.trim() || null,
+      });
+
+      toast.success('Thêm hoạt động cá nhân thành công!');
+      onSuccess();
+      onClose();
+    } catch (err: unknown) {
+      console.error('Error creating trainer task:', err);
+      const apiErr = err as { response?: { data?: { message?: string } } };
+      const msg = apiErr.response?.data?.message || 'Không thể tạo hoạt động. Vui lòng thử lại sau.';
+      setErrorMessage(msg);
+      toast.error(msg);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200 overflow-y-auto">
       <div className="w-full max-w-xl bg-white dark:bg-[#0c1626] rounded-3xl border border-slate-200 dark:border-[#162338] shadow-2xl overflow-hidden my-auto animate-in zoom-in-95 duration-200">
@@ -297,14 +386,16 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({
         <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
-              <Plus className="h-5 w-5" />
+              {activeTab === 'SESSION' ? <Plus className="h-5 w-5" /> : <ClipboardList className="h-5 w-5" />}
             </div>
             <div>
               <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                Lên lịch buổi tập mới
+                {activeTab === 'SESSION' ? 'Lên lịch buổi tập mới' : 'Thêm hoạt động cá nhân'}
               </h3>
               <p className="text-xs text-slate-400">
-                Đặt lịch tập riêng gắn với học viên và hợp đồng PT
+                {activeTab === 'SESSION'
+                  ? 'Đặt lịch tập riêng gắn với học viên và hợp đồng PT'
+                  : 'Lên lịch công việc, sinh hoạt và lịch trình cá nhân của PT'}
               </p>
             </div>
           </div>
@@ -318,15 +409,223 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({
           </button>
         </div>
 
-        {/* Modal Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {/* Error Message Alert */}
-          {errorMessage && (
-            <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 flex items-start gap-2.5 text-xs text-rose-600 dark:text-rose-300">
-              <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-rose-500" />
-              <span>{errorMessage}</span>
+        {/* Tab Segmented Control */}
+        <div className="px-6 pt-4 pb-1">
+          <div className="p-1 rounded-2xl bg-slate-100 dark:bg-[#070e17] border border-slate-200/80 dark:border-[#162338] grid grid-cols-2 gap-1">
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab('SESSION');
+                setErrorMessage(null);
+              }}
+              className={`flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                activeTab === 'SESSION'
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <span>🏋️ Lịch dạy học viên</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab('TASK');
+                setErrorMessage(null);
+              }}
+              className={`flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                activeTab === 'TASK'
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <span>📝 Hoạt động cá nhân</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Modal Body: Task Form hoặc Session Form */}
+        {activeTab === 'TASK' ? (
+          <form onSubmit={handleSubmitTask} className="p-6 space-y-4">
+            {errorMessage && (
+              <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 flex items-start gap-2.5 text-xs text-rose-600 dark:text-rose-300">
+                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-rose-500" />
+                <span>{errorMessage}</span>
+              </div>
+            )}
+
+            {/* 1. Tiêu đề hoạt động */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                Tiêu đề hoạt động / công việc <span className="text-rose-500">*</span>
+              </label>
+              <input
+                type="text"
+                required
+                value={taskTitle}
+                onChange={(e) => setTaskTitle(e.target.value)}
+                placeholder="Ví dụ: Thức dậy & Ăn sáng, Họp chuyên môn, Tự tập gym..."
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#070e17] border border-slate-200/80 dark:border-[#162338] text-xs sm:text-sm text-slate-900 dark:text-white font-medium outline-none focus:border-emerald-500 transition-all"
+              />
+              {/* Quick presets for tasks */}
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {COMMON_TASK_PRESETS.map((preset) => (
+                  <button
+                    key={preset}
+                    type="button"
+                    onClick={() => setTaskTitle(preset)}
+                    className="text-[10px] px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-emerald-50 hover:text-emerald-600 dark:hover:bg-emerald-950/40 dark:hover:text-emerald-400 transition cursor-pointer"
+                  >
+                    {preset}
+                  </button>
+                ))}
+              </div>
             </div>
-          )}
+
+            {/* 2. Ngày thực hiện */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                Ngày thực hiện <span className="text-rose-500">*</span>
+              </label>
+              <div className="relative">
+                <Calendar className="h-4 w-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="date"
+                  required
+                  value={taskDate}
+                  onChange={(e) => setTaskDate(e.target.value)}
+                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#070e17] border border-slate-200/80 dark:border-[#162338] text-xs sm:text-sm text-slate-900 dark:text-white font-medium outline-none focus:border-emerald-500 cursor-pointer"
+                />
+              </div>
+            </div>
+
+            {/* 3. Tùy chọn Cả ngày */}
+            <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-[#070e17] border border-slate-200/80 dark:border-[#162338]">
+              <input
+                type="checkbox"
+                id="taskAllDayCheckbox"
+                checked={taskAllDay}
+                onChange={(e) => setTaskAllDay(e.target.checked)}
+                className="h-4 w-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300 dark:border-slate-700 cursor-pointer"
+              />
+              <label htmlFor="taskAllDayCheckbox" className="text-xs font-medium text-slate-700 dark:text-slate-300 cursor-pointer select-none">
+                Hoạt động cả ngày (không giới hạn khung giờ cụ thể)
+              </label>
+            </div>
+
+            {/* 4. Giờ bắt đầu & Giờ kết thúc (chỉ hiện khi không tích Cả ngày) */}
+            {!taskAllDay && (
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    Giờ bắt đầu
+                  </label>
+                  <div className="relative">
+                    <Clock className="h-4 w-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                      type="time"
+                      value={taskStartTime}
+                      onChange={(e) => {
+                        setTaskStartTime(e.target.value);
+                        setTaskEndTime(calculateDefaultEndTime(e.target.value));
+                      }}
+                      className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#070e17] border border-slate-200/80 dark:border-[#162338] text-xs sm:text-sm text-slate-900 dark:text-white font-medium outline-none focus:border-emerald-500 cursor-pointer"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    Giờ kết thúc
+                  </label>
+                  <div className="relative">
+                    <Clock className="h-4 w-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                      type="time"
+                      value={taskEndTime}
+                      onChange={(e) => setTaskEndTime(e.target.value)}
+                      className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#070e17] border border-slate-200/80 dark:border-[#162338] text-xs sm:text-sm text-slate-900 dark:text-white font-medium outline-none focus:border-emerald-500 cursor-pointer"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 5. Chọn màu sắc */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                Màu sắc thẻ hoạt động trên lịch
+              </label>
+              <div className="flex items-center gap-2 flex-wrap">
+                {TASK_COLOR_OPTIONS.map((c) => (
+                  <button
+                    key={c.hex}
+                    type="button"
+                    onClick={() => setTaskColor(c.hex)}
+                    title={c.label}
+                    className={`h-7 w-7 rounded-full transition-transform cursor-pointer flex items-center justify-center ${
+                      taskColor === c.hex ? 'ring-2 ring-offset-2 ring-emerald-500 scale-110' : 'hover:scale-105'
+                    }`}
+                    style={{ backgroundColor: c.hex }}
+                  >
+                    {taskColor === c.hex && <CheckCircle2 className="h-4 w-4 text-white" />}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 6. Ghi chú */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                Ghi chú chi tiết (tùy chọn)
+              </label>
+              <textarea
+                rows={2}
+                value={taskDescription}
+                onChange={(e) => setTaskDescription(e.target.value)}
+                placeholder="Nội dung chi tiết hoặc dặn dò cho hoạt động này..."
+                className="w-full p-3 rounded-xl bg-slate-50 dark:bg-[#070e17] border border-slate-200/80 dark:border-[#162338] text-xs sm:text-sm text-slate-900 dark:text-white font-medium outline-none focus:border-emerald-500"
+              />
+            </div>
+
+            {/* Modal Footer Actions cho Task */}
+            <div className="pt-3 flex items-center justify-end gap-3 border-t border-slate-100 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={isSubmitting}
+                className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold transition-colors cursor-pointer disabled:opacity-50"
+              >
+                Hủy
+              </button>
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs sm:text-sm shadow-sm hover:shadow-md shadow-emerald-600/30 transition-all cursor-pointer disabled:opacity-50"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Đang lưu...</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="h-4 w-4" />
+                    <span>Lưu hoạt động</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        ) : (
+          <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            {/* Error Message Alert */}
+            {errorMessage && (
+              <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 flex items-start gap-2.5 text-xs text-rose-600 dark:text-rose-300">
+                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-rose-500" />
+                <span>{errorMessage}</span>
+              </div>
+            )}
 
           {/* 1. Chọn học viên */}
           <div className="space-y-1.5">
@@ -600,6 +899,7 @@ export const CreateSessionModal: React.FC<CreateSessionModalProps> = ({
             </button>
           </div>
         </form>
+        )}
       </div>
     </div>
   );

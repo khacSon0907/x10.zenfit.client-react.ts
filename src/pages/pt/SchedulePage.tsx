@@ -4,6 +4,7 @@ import {
   Calendar,
   AlertCircle,
   RefreshCw,
+  ClipboardList,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../../context/AuthContext';
@@ -29,6 +30,8 @@ import { PtSessionTableListView } from '../../components/schedule/PtSessionTable
 import { CreateSessionModal } from '../../components/schedule/CreateSessionModal';
 import { SessionDetailModal } from '../../components/schedule/SessionDetailModal';
 import { CompleteSessionModal } from '../../components/schedule/CompleteSessionModal';
+import { TrainerTaskDetailModal } from '../../components/schedule/TrainerTaskDetailModal';
+import type { TrainerTask } from '../../types/session.types';
 
 export default function SchedulePage() {
   const { user: authUser } = useAuth();
@@ -39,11 +42,11 @@ export default function SchedulePage() {
   const [view, setView] = useState<CalendarViewType>('WEEK');
   const [activeDate, setActiveDate] = useState<Date>(new Date());
   const [statusFilter, setStatusFilter] = useState<TrainingSessionStatus | 'ALL'>('ALL');
-  const [sessionType, setSessionType] = useState<'IN_PERSON' | 'SOLO'>('IN_PERSON');
   const [selectedTrainerId, setSelectedTrainerId] = useState<string>(authUser?.id || '');
 
   // Session Data & Loading
   const [sessions, setSessions] = useState<TrainingSessionCalendarItem[]>([]);
+  const [tasks, setTasks] = useState<TrainerTask[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -55,6 +58,10 @@ export default function SchedulePage() {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState<boolean>(false);
   const [sessionToComplete, setSessionToComplete] = useState<TrainingSessionCalendarItem | null>(null);
   const [isCompleteModalOpen, setIsCompleteModalOpen] = useState<boolean>(false);
+
+  // Task Detail Modal state
+  const [selectedTask, setSelectedTask] = useState<TrainerTask | null>(null);
+  const [isTaskDetailModalOpen, setIsTaskDetailModalOpen] = useState<boolean>(false);
 
   // Tự động tải danh sách khách hàng nếu chưa có
   useEffect(() => {
@@ -72,11 +79,14 @@ export default function SchedulePage() {
     return map;
   }, [clients]);
 
-  // Tính số lượng buổi tập hôm nay
+  // Tính số lượng buổi tập & hoạt động hôm nay
   const todayStr = useMemo(() => formatIsoDate(new Date()), []);
   const todaySessionsCount = useMemo(() => {
     return sessions.filter((s) => s.trainingDate === todayStr).length;
   }, [sessions, todayStr]);
+  const todayTasksCount = useMemo(() => {
+    return tasks.filter((t) => t.taskDate === todayStr).length;
+  }, [tasks, todayStr]);
 
   // Trainer list for Admin dropdown
   const trainersList = useMemo(() => {
@@ -107,6 +117,7 @@ export default function SchedulePage() {
         status: statusFilter === 'ALL' ? undefined : statusFilter,
       });
       setSessions(data.sessions || []);
+      setTasks(data.tasks || []);
     } catch (err: unknown) {
       console.error('Error fetching calendar sessions:', err);
       const apiErr = err as { response?: { data?: { message?: string } } };
@@ -190,20 +201,11 @@ export default function SchedulePage() {
     setIsDetailModalOpen(true);
   }, []);
 
-  // Quick Lifecycle Attendance Operations
-  const handleCheckIn = useCallback(
-    async (sessionId: string) => {
-      try {
-        await trainingSessionApi.checkIn(sessionId);
-        toast.success('Điểm danh học viên thành công!');
-        fetchCalendarSessions();
-      } catch (err: unknown) {
-        const apiErr = err as { response?: { data?: { message?: string } } };
-        toast.error(apiErr.response?.data?.message || 'Không thể điểm danh buổi tập');
-      }
-    },
-    [fetchCalendarSessions]
-  );
+  // Trainer Task Detail Selection
+  const handleOpenTaskDetail = useCallback((task: TrainerTask) => {
+    setSelectedTask(task);
+    setIsTaskDetailModalOpen(true);
+  }, []);
 
   const handleOpenCompleteModal = useCallback(
     (session: TrainingSessionCalendarItem | TrainingSession) => {
@@ -266,8 +268,8 @@ export default function SchedulePage() {
 
   return (
     <div className="space-y-5">
-      {/* 1. Thẻ thống kê (Tổng số học viên & Buổi tập hôm nay) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {/* 1. Thẻ thống kê (Học viên, Buổi dạy hôm nay, Hoạt động cá nhân) */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Thẻ: Tổng số học viên */}
         <div className="bg-white dark:bg-[#0c1626] rounded-2xl border border-slate-200 dark:border-[#162338] p-5 shadow-xs flex items-center gap-4 transition hover:shadow-sm">
           <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/30">
@@ -281,15 +283,28 @@ export default function SchedulePage() {
           </div>
         </div>
 
-        {/* Thẻ: Buổi tập hôm nay */}
+        {/* Thẻ: Buổi dạy hôm nay */}
         <div className="bg-white dark:bg-[#0c1626] rounded-2xl border border-slate-200 dark:border-[#162338] p-5 shadow-xs flex items-center gap-4 transition hover:shadow-sm">
           <div className="p-3 rounded-2xl bg-teal-50 dark:bg-teal-950/40 text-teal-600 dark:text-teal-400 border border-teal-200/50 dark:border-teal-800/30">
             <Calendar className="h-6 w-6" />
           </div>
           <div>
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Buổi tập hôm nay</p>
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Buổi dạy hôm nay</p>
             <h3 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white mt-0.5">
               {todaySessionsCount}
+            </h3>
+          </div>
+        </div>
+
+        {/* Thẻ: Hoạt động cá nhân hôm nay */}
+        <div className="bg-white dark:bg-[#0c1626] rounded-2xl border border-slate-200 dark:border-[#162338] p-5 shadow-xs flex items-center gap-4 transition hover:shadow-sm">
+          <div className="p-3 rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-200/50 dark:border-blue-800/30">
+            <ClipboardList className="h-6 w-6" />
+          </div>
+          <div>
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Hoạt động cá nhân</p>
+            <h3 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white mt-0.5">
+              {todayTasksCount}
             </h3>
           </div>
         </div>
@@ -311,8 +326,6 @@ export default function SchedulePage() {
           statusFilter={statusFilter}
           onStatusFilterChange={setStatusFilter}
           todayCount={todaySessionsCount}
-          sessionType={sessionType}
-          onSessionTypeChange={setSessionType}
           isAdmin={isAdmin}
           trainers={trainersList}
           selectedTrainerId={selectedTrainerId}
@@ -345,8 +358,9 @@ export default function SchedulePage() {
             <PtCalendarWeekView
               activeDate={activeDate}
               sessions={sessions}
+              tasks={tasks}
               onSelectSession={handleOpenDetail}
-              onCheckIn={handleCheckIn}
+              onSelectTask={handleOpenTaskDetail}
               onComplete={handleComplete}
               onNoShow={handleNoShow}
               onCancel={handleCancel}
@@ -360,8 +374,9 @@ export default function SchedulePage() {
             <PtCalendarDayView
               activeDate={activeDate}
               sessions={sessions}
+              tasks={tasks}
               onSelectSession={handleOpenDetail}
-              onCheckIn={handleCheckIn}
+              onSelectTask={handleOpenTaskDetail}
               onComplete={handleComplete}
               onNoShow={handleNoShow}
               onCancel={handleCancel}
@@ -375,7 +390,9 @@ export default function SchedulePage() {
             <PtCalendarMonthView
               activeDate={activeDate}
               sessions={sessions}
+              tasks={tasks}
               onSelectSession={handleOpenDetail}
+              onSelectTask={handleOpenTaskDetail}
               onSelectDate={(d) => {
                 setActiveDate(d);
                 setView('DAY');
@@ -388,7 +405,6 @@ export default function SchedulePage() {
             <PtSessionTableListView
               trainerId={selectedTrainerId || authUser?.id}
               onSelectSession={handleOpenDetail}
-              onCheckIn={handleCheckIn}
               onComplete={handleComplete}
               onNoShow={handleNoShow}
               onCancel={handleCancel}
@@ -397,7 +413,7 @@ export default function SchedulePage() {
         </div>
       </div>
 
-      {/* Modal Lên lịch tập mới */}
+      {/* Modal Lên lịch tập mới & Hoạt động cá nhân */}
       <CreateSessionModal
         isOpen={isCreateModalOpen}
         onClose={() => {
@@ -423,12 +439,24 @@ export default function SchedulePage() {
         onSuccess={() => {
           fetchCalendarSessions();
         }}
-        onCheckIn={handleCheckIn}
         onComplete={handleComplete}
         onOpenCompleteModal={handleOpenCompleteModal}
         onNoShow={handleNoShow}
         onCancel={handleCancel}
         clientsMap={clientsMap}
+      />
+
+      {/* Modal Chi tiết & Thao tác Hoạt động cá nhân PT */}
+      <TrainerTaskDetailModal
+        task={selectedTask}
+        isOpen={isTaskDetailModalOpen}
+        onClose={() => {
+          setIsTaskDetailModalOpen(false);
+          setSelectedTask(null);
+        }}
+        onSuccess={() => {
+          fetchCalendarSessions();
+        }}
       />
 
       {/* Modal Xác nhận Hoàn thành buổi tập & Upload ảnh minh chứng lên Cloudinary */}

@@ -259,17 +259,6 @@ export const PtSessionTableListView: React.FC<PtSessionTableListViewProps> = ({
                           Chi tiết
                         </button>
 
-                        {!isTerminal && session.status === 'SCHEDULED' && onCheckIn && (
-                          <button
-                            type="button"
-                            onClick={() => onCheckIn(session.id)}
-                            title="Điểm danh"
-                            className="p-1 rounded-lg bg-cyan-50 dark:bg-cyan-950/40 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30 hover:bg-cyan-100 transition-colors"
-                          >
-                            <UserCheck className="h-3.5 w-3.5" />
-                          </button>
-                        )}
-
                         {!isTerminal && onComplete && (
                           <button
                             type="button"

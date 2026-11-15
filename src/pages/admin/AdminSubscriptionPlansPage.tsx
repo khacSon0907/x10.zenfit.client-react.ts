@@ -8,7 +8,7 @@ export default function AdminSubscriptionPlansPage() {
           Hạn mức học viên: Free (5), Plus (25), Pro (50), phí dịch vụ và số ngày ân hạn (7 ngày).
         </p>
       </div>
-      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-8 text-center text-slate-500 dark:text-slate-400 shadow-xs">
+      <div className="bg-white dark:bg-[#120826]/90 rounded-2xl border border-slate-200 dark:border-purple-500/15 p-8 text-center text-slate-500 dark:text-purple-300/60 shadow-xs">
         Tính năng Cấu hình gói thuê bao chi tiết sẽ hoàn thiện ở Bước 6.
       </div>
     </div>

@@ -167,8 +167,12 @@ export default function AppRoutes() {
         <Route index element={<Navigate to="overview" replace />} />
         <Route path="overview" element={<AdminOverviewPage />} />
         <Route path="pts" element={<AdminPTManagementPage />} />
+        <Route path="clients" element={<AdminOverviewPage />} />
         <Route path="plans" element={<AdminSubscriptionPlansPage />} />
+        <Route path="schedule" element={<SchedulePage />} />
         <Route path="payments" element={<AdminFeePaymentsPage />} />
+        <Route path="settings" element={<AdminOverviewPage />} />
+        <Route path="reports" element={<AdminOverviewPage />} />
         <Route path="audit-logs" element={<AdminAuditLogsPage />} />
       </Route>
 

@@ -31,9 +31,40 @@ export const userApi = {
     );
     return response.data.data;
   },
+
+  /**
+   * Lấy danh sách tất cả người dùng trong hệ thống (Dành cho Admin)
+   * Endpoint: GET /api/users/all
+   * @returns Promise<UserProfile[]>
+   */
+  getAllUsers: async (): Promise<UserProfile[]> => {
+    try {
+      const response = await axiosClient.get<ApiResponse<UserProfile[]> | UserProfile[]>('/api/users/all');
+      if (response.data && typeof response.data === 'object' && 'data' in response.data) {
+        return (response.data as ApiResponse<UserProfile[]>).data ?? [];
+      }
+      if (Array.isArray(response.data)) {
+        return response.data;
+      }
+      return [];
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { status?: number } };
+      if (axiosErr?.response?.status === 404) {
+        const fallbackRes = await axiosClient.get<ApiResponse<UserProfile[]> | UserProfile[]>('/api/users');
+        if (fallbackRes.data && typeof fallbackRes.data === 'object' && 'data' in fallbackRes.data) {
+          return (fallbackRes.data as ApiResponse<UserProfile[]>).data ?? [];
+        }
+        if (Array.isArray(fallbackRes.data)) {
+          return fallbackRes.data;
+        }
+      }
+      throw err;
+    }
+  },
 };
 
 export const getMe = userApi.getMe;
 export const updateMe = userApi.updateMe;
+export const getAllUsers = userApi.getAllUsers;
 export default userApi;
 

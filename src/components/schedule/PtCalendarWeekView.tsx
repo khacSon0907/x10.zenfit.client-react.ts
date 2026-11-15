@@ -4,10 +4,13 @@ import {
   Plus,
   Clock,
   Camera,
+  ClipboardList,
+  CheckCircle2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import type {
   TrainingSessionCalendarItem,
+  TrainerTask,
 } from '../../types/session.types';
 import { SESSION_STATUS_CONFIG } from '../../types/session.types';
 import { getWeekDays, formatTimeRange, isPastDateTime } from '../../utils/calendarUtils';
@@ -15,7 +18,9 @@ import { getWeekDays, formatTimeRange, isPastDateTime } from '../../utils/calend
 interface PtCalendarWeekViewProps {
   activeDate: Date;
   sessions: TrainingSessionCalendarItem[];
+  tasks?: TrainerTask[];
   onSelectSession: (session: TrainingSessionCalendarItem) => void;
+  onSelectTask?: (task: TrainerTask) => void;
   onCheckIn?: (sessionId: string) => void;
   onComplete?: (sessionId: string) => void;
   onNoShow?: (sessionId: string) => void;
@@ -65,7 +70,9 @@ function parseTimeToMinutes(timeStr?: string | null): number {
 export const PtCalendarWeekView: React.FC<PtCalendarWeekViewProps> = ({
   activeDate,
   sessions,
+  tasks = [],
   onSelectSession,
+  onSelectTask,
   onAddSession,
   clientsMap = new Map(),
   isLoading = false,
@@ -86,6 +93,21 @@ export const PtCalendarWeekView: React.FC<PtCalendarWeekViewProps> = ({
 
     return map;
   }, [sessions, weekDays]);
+
+  // Nhóm danh sách hoạt động cá nhân của PT theo từng ngày
+  const tasksByDate = React.useMemo(() => {
+    const map = new Map<string, TrainerTask[]>();
+    weekDays.forEach((day) => map.set(day.dateStr, []));
+
+    (tasks || []).forEach((t) => {
+      const list = map.get(t.taskDate);
+      if (list) {
+        list.push(t);
+      }
+    });
+
+    return map;
+  }, [tasks, weekDays]);
 
   // Lấy tên hiển thị học viên
   const getDisplayName = (session: TrainingSessionCalendarItem): string => {
@@ -115,6 +137,23 @@ export const PtCalendarWeekView: React.FC<PtCalendarWeekViewProps> = ({
     const height = Math.max(36, (durationMinutes / 60) * SLOT_HEIGHT - 4);
 
     return { top, height };
+  };
+
+  // Tính vị trí top và chiều cao cho hoạt động cá nhân PT
+  const computeTaskPosition = (task: TrainerTask) => {
+    if (task.allDay || !task.startTime) {
+      return { top: 2, height: 32, isAllDay: true };
+    }
+    const startMinutes = parseTimeToMinutes(task.startTime);
+    let endMinutes = task.endTime ? parseTimeToMinutes(task.endTime) : 0;
+    if (!endMinutes || endMinutes <= startMinutes) {
+      endMinutes = startMinutes + 60;
+    }
+    const topOffsetMinutes = Math.max(0, startMinutes - START_OF_DAY_MINUTES);
+    const top = (topOffsetMinutes / 60) * SLOT_HEIGHT;
+    const durationMinutes = Math.max(30, endMinutes - startMinutes);
+    const height = Math.max(32, (durationMinutes / 60) * SLOT_HEIGHT - 4);
+    return { top, height, isAllDay: false };
   };
 
   return (
@@ -178,6 +217,7 @@ export const PtCalendarWeekView: React.FC<PtCalendarWeekViewProps> = ({
             <div className="flex-1 grid grid-cols-7 relative">
               {weekDays.map((day) => {
                 const daySessions = sessionsByDate.get(day.dateStr) || [];
+                const dayTasks = tasksByDate.get(day.dateStr) || [];
 
                 return (
                   <div
@@ -225,8 +265,79 @@ export const PtCalendarWeekView: React.FC<PtCalendarWeekViewProps> = ({
                       );
                     })}
 
-                    {/* VÙNG CHỨA CÁC THẺ BUỔI TẬP KÉO DÀI THEO THỜI LƯỢNG (startTime -> endTime) */}
+                    {/* VÙNG CHỨA CÁC THẺ BUỔI TẬP KÉO DÀI THEO THỜI LƯỢNG (startTime -> endTime) & HOẠT ĐỘNG CÁ NHÂN */}
                     <div className="absolute inset-0 pointer-events-none">
+                      {/* 1. Hoạt động cá nhân của PT (Trainer Tasks) */}
+                      {dayTasks.map((task) => {
+                        const { top, height, isAllDay } = computeTaskPosition(task);
+                        const baseColor = task.color || '#10B981';
+                        const isDone = task.status === 'DONE';
+                        const isSkipped = task.status === 'SKIPPED';
+                        const timeStr = isAllDay ? 'Cả ngày' : formatTimeRange(task.startTime, task.endTime);
+
+                        return (
+                          <div
+                            key={`task-${task.id}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onSelectTask && onSelectTask(task);
+                            }}
+                            style={{
+                              top: `${top}px`,
+                              height: `${height}px`,
+                              left: '3px',
+                              right: '3px',
+                              borderLeft: `4px solid ${baseColor}`,
+                            }}
+                            title={`[Hoạt động cá nhân] ${task.title} (${timeStr}) - ${
+                              isDone ? 'Đã hoàn thành' : isSkipped ? 'Đã bỏ qua' : 'Cần làm'
+                            }`}
+                            className={`absolute pointer-events-auto rounded-xl px-2 py-1.5 flex flex-col justify-between shadow-xs transition-all duration-150 hover:scale-[1.01] hover:shadow-md cursor-pointer z-20 border border-slate-200/90 dark:border-slate-700/80 bg-white/95 dark:bg-[#111e30]/95 backdrop-blur-xs ${
+                              isDone ? 'opacity-80' : isSkipped ? 'opacity-50' : ''
+                            }`}
+                          >
+                            <div className="flex items-center justify-between gap-1 w-full min-w-0">
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                <ClipboardList
+                                  style={{ color: baseColor }}
+                                  className="h-3.5 w-3.5 shrink-0"
+                                />
+                                <span
+                                  className={`text-xs font-semibold truncate leading-tight ${
+                                    isDone
+                                      ? 'line-through text-slate-400 dark:text-slate-500'
+                                      : 'text-slate-800 dark:text-slate-100'
+                                  }`}
+                                >
+                                  {task.title}
+                                </span>
+                              </div>
+                              <div className="shrink-0 flex items-center gap-1">
+                                {isDone && (
+                                  <CheckCircle2 className="h-3 w-3 text-emerald-500 shrink-0" />
+                                )}
+                                {isAllDay && (
+                                  <span
+                                    style={{ color: baseColor, backgroundColor: `${baseColor}20` }}
+                                    className="text-[9px] font-bold px-1.5 py-0.2 rounded"
+                                  >
+                                    Cả ngày
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            {height >= 45 && !isAllDay && (
+                              <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate flex items-center gap-1 mt-0.5">
+                                <Clock className="h-2.5 w-2.5 shrink-0" />
+                                <span>{timeStr}</span>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+
+                      {/* 2. Buổi tập học viên (Training Sessions) */}
                       {daySessions.map((session) => {
                         const { top, height } = computeSessionPosition(session);
                         const displayName = getDisplayName(session);

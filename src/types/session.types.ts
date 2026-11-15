@@ -61,6 +61,59 @@ export interface TrainingSessionCalendarItem {
   clientAvatarUrl?: string;
 }
 
+// ============================================================================
+// HOẠT ĐỘNG / CÔNG VIỆC CÁ NHÂN CỦA HUẤN LUYỆN VIÊN (TRAINER TASK)
+// ============================================================================
+export type TrainerTaskStatus = 'TODO' | 'DONE' | 'SKIPPED';
+
+export interface TrainerTask {
+  id: string;
+  trainerId: string;
+  title: string;              // "Thức dậy & Ăn sáng", "Họp chuyên môn"
+  description?: string | null;
+  color?: string;             // Mã màu hex: "#10B981", "#3B82F6",...
+  taskDate: string;           // "yyyy-MM-dd"
+  startTime?: string | null;  // "07:00:00"
+  endTime?: string | null;    // "08:00:00"
+  allDay: boolean;
+  status: TrainerTaskStatus;
+  completedAt?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CreateTrainerTaskRequest {
+  title: string;
+  taskDate: string;
+  startTime?: string | null;
+  endTime?: string | null;
+  allDay: boolean;
+  color?: string;
+  description?: string | null;
+}
+
+export interface UpdateTrainerTaskRequest {
+  title?: string;
+  taskDate?: string;
+  startTime?: string | null;
+  endTime?: string | null;
+  allDay?: boolean;
+  color?: string;
+  description?: string | null;
+}
+
+export interface UpdateTrainerTaskStatusRequest {
+  status: TrainerTaskStatus;
+}
+
+export interface TrainerTaskFilterParams {
+  date?: string;
+  startDate?: string;
+  endDate?: string;
+  status?: TrainerTaskStatus;
+  trainerId?: string;
+}
+
 // Response Calendar API (/api/training-sessions/calendar)
 export interface TrainingSessionCalendarResponse {
   view: CalendarViewType;
@@ -68,6 +121,7 @@ export interface TrainingSessionCalendarResponse {
   endDate: string;
   totalSessions: number;
   sessions: TrainingSessionCalendarItem[];
+  tasks?: TrainerTask[]; // MỚI: Danh sách hoạt động cá nhân của PT
 }
 
 // Request tạo buổi tập mới (POST /api/training-sessions)

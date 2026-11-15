@@ -15,7 +15,8 @@ import type { ApiResponse, UserProfile } from '../types/auth';
  * - Refresh Token Queue: Chống race condition khi nhiều request 401 xảy ra đồng thời
  */
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+const rawBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+export const API_BASE_URL = rawBaseUrl.replace(/\/+$/, '');
 
 // ============================================================================
 // 1. QUẢN LÝ ACCESS TOKEN TRONG BỘ NHỚ RAM (IN-MEMORY TOKEN)

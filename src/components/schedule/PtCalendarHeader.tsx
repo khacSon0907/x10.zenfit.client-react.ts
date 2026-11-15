@@ -6,8 +6,6 @@ import {
   RefreshCw,
   Table as TableIcon,
   Filter,
-  User,
-  Users,
 } from 'lucide-react';
 import type { CalendarViewType, TrainingSessionStatus } from '../../types/session.types';
 import { SESSION_STATUS_CONFIG } from '../../types/session.types';
@@ -25,8 +23,6 @@ interface PtCalendarHeaderProps {
   statusFilter?: TrainingSessionStatus | 'ALL';
   onStatusFilterChange?: (st: TrainingSessionStatus | 'ALL') => void;
   todayCount?: number;
-  sessionType?: 'IN_PERSON' | 'SOLO';
-  onSessionTypeChange?: (type: 'IN_PERSON' | 'SOLO') => void;
   isAdmin?: boolean;
   trainers?: Array<{ id: string; fullName: string }>;
   selectedTrainerId?: string;
@@ -46,8 +42,6 @@ export const PtCalendarHeader: React.FC<PtCalendarHeaderProps> = ({
   statusFilter = 'ALL',
   onStatusFilterChange,
   todayCount = 0,
-  sessionType = 'IN_PERSON',
-  onSessionTypeChange,
   isAdmin = false,
   trainers = [],
   selectedTrainerId = '',
@@ -71,36 +65,8 @@ export const PtCalendarHeader: React.FC<PtCalendarHeaderProps> = ({
           </div>
         </div>
 
-        {/* Right: Bộ chọn phân loại (Trực tiếp / Tập riêng) & Nút + Lên lịch tập mới */}
+        {/* Right: Nút + Lên lịch tập mới */}
         <div className="flex items-center gap-3 flex-wrap">
-          {/* Trực tiếp vs Tập riêng */}
-          <div className="inline-flex items-center p-1 rounded-xl bg-slate-100 dark:bg-[#070e17] border border-slate-200/80 dark:border-[#162338]">
-            <button
-              type="button"
-              onClick={() => onSessionTypeChange?.('IN_PERSON')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                sessionType === 'IN_PERSON'
-                  ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              <Users className="h-3.5 w-3.5" />
-              <span>Trực tiếp</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => onSessionTypeChange?.('SOLO')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                sessionType === 'SOLO'
-                  ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              <User className="h-3.5 w-3.5" />
-              <span>Tập riêng</span>
-            </button>
-          </div>
-
           {/* Nút hành động chính: + Lên lịch tập mới */}
           <button
             type="button"
