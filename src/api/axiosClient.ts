@@ -39,9 +39,19 @@ export const setAccessToken = (token: string | null): void => {
   }
 };
 
-export const getRefreshToken = (): string | null => memoryRefreshToken;
+export const getRefreshToken = (): string | null => {
+  return memoryRefreshToken || (typeof localStorage !== 'undefined' ? localStorage.getItem('zenfit_refresh_token') : null);
+};
+
 export const setRefreshToken = (token: string | null): void => {
   memoryRefreshToken = token;
+  if (typeof localStorage !== 'undefined') {
+    if (token) {
+      localStorage.setItem('zenfit_refresh_token', token);
+    } else {
+      localStorage.removeItem('zenfit_refresh_token');
+    }
+  }
 };
 
 /**
@@ -129,15 +139,19 @@ const processQueue = (error: unknown, token: string | null = null): void => {
  */
 export const executeRefreshToken = async (): Promise<string> => {
   try {
-    // Body gửi kèm rỗng hoặc fallback token (nếu có), cookie đã được withCredentials gửi tự động
-    const body = memoryRefreshToken ? { refreshToken: memoryRefreshToken } : {};
+    // Body gửi kèm fallback token nếu có, cookie vẫn được withCredentials gửi tự động
+    const tokenToSend = getRefreshToken();
+    const body = tokenToSend ? { refreshToken: tokenToSend } : {};
     const response = await rawAuthClient.post<ApiResponse<UserProfile>>('/api/auth/refresh', body);
     
     const userProfile = response.data.data;
     const newAccessToken = userProfile.accessToken;
 
-    // Cập nhật accessToken mới vào RAM
+    // Cập nhật accessToken và refreshToken mới vào RAM & localStorage
     setAccessToken(newAccessToken);
+    if (userProfile.refreshToken) {
+      setRefreshToken(userProfile.refreshToken);
+    }
 
     // Đồng bộ lại AuthContext
     if (authListeners.onSessionRefreshed) {

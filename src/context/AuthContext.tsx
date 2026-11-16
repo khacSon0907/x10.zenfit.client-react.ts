@@ -12,6 +12,7 @@ import { getMe } from '../api/userApi';
 import {
   getAccessToken,
   setAccessToken,
+  setRefreshToken,
   setAuthInterceptorListeners,
 } from '../api/axiosClient';
 import type {
@@ -30,6 +31,7 @@ import type {
 } from '../types/auth';
 import SplashLoader from '../shared/components/ui/SplashLoader';
 import { isAdminUser } from '../shared/utils/roleUtils';
+import { isTokenExpired } from '../shared/utils/jwtUtils';
 
 /**
  * Interface đầy đủ cho AuthContext
@@ -82,12 +84,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
     setAccessToken(profile.accessToken);
     setAccessTokenState(profile.accessToken);
+    if (profile.refreshToken) {
+      setRefreshToken(profile.refreshToken);
+    }
     setUser(userWithFallbackName);
 
     try {
       localStorage.setItem('zenfit_user', JSON.stringify(userWithFallbackName));
       if (profile.accessToken) {
         localStorage.setItem('zenfit_access_token', profile.accessToken);
+      }
+      if (profile.refreshToken) {
+        localStorage.setItem('zenfit_refresh_token', profile.refreshToken);
       }
     } catch {
       // Ignore quota errors
@@ -110,10 +118,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const handleAuthCleanup = useCallback(() => {
     setAccessToken(null);
     setAccessTokenState(null);
+    setRefreshToken(null);
     setUser(null);
     try {
       localStorage.removeItem('zenfit_user');
       localStorage.removeItem('zenfit_access_token');
+      localStorage.removeItem('zenfit_refresh_token');
       localStorage.removeItem('zenfit_role');
     } catch {
       // Ignore
@@ -123,6 +133,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   /**
    * Action: Làm mới phiên làm việc (Silent Refresh)
    * Gửi HTTP-only Cookie refreshToken tự động thông qua withCredentials: true
+   * hoặc gửi kèm fallback token trong body
    */
   const refreshSession = useCallback(async (): Promise<UserProfile | null> => {
     try {
@@ -131,7 +142,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return handleAuthSuccess(profile);
     } catch (err: unknown) {
       const status = (err as { response?: { status?: number } })?.response?.status;
-      if (status === 401 || status === 403) {
+      // Chỉ cleanup khi access token hiện tại cũng đã hết hạn
+      const currentToken = getAccessToken();
+      if ((status === 401 || status === 403) && isTokenExpired(currentToken)) {
         handleAuthCleanup();
       }
       return null;
@@ -202,19 +215,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const bootstrapAuth = async () => {
       try {
+        const savedToken = getAccessToken();
+        const savedUserStr = localStorage.getItem('zenfit_user');
+
+        // 1. Nếu token còn hạn sử dụng -> phục hồi phiên đăng nhập ngay lập tức
+        if (savedToken && !isTokenExpired(savedToken) && savedUserStr) {
+          try {
+            const parsed = JSON.parse(savedUserStr);
+            setUser(parsed);
+            setAccessTokenState(savedToken);
+            setIsLoading(false);
+          } catch {
+            // ignore
+          }
+        }
+
+        // 2. Thử silent refresh ngầm (sử dụng refreshToken trong fallback localStorage hoặc Cookie)
         const refreshedUser = await refreshSession();
-        // Nếu không refresh được qua cookie và trong localStorage cũng không có session
+
+        // 3. Nếu refresh không thành công và token cũ đã hết hạn -> dọn dẹp
         if (!refreshedUser) {
-          const savedToken = localStorage.getItem('zenfit_access_token');
-          const savedUser = localStorage.getItem('zenfit_user');
-          if (!savedToken && !savedUser) {
+          const currentToken = getAccessToken();
+          if (isTokenExpired(currentToken)) {
             handleAuthCleanup();
           }
         }
       } catch {
-        const savedToken = localStorage.getItem('zenfit_access_token');
-        const savedUser = localStorage.getItem('zenfit_user');
-        if (!savedToken && !savedUser) {
+        const currentToken = getAccessToken();
+        if (isTokenExpired(currentToken)) {
           handleAuthCleanup();
         }
       } finally {

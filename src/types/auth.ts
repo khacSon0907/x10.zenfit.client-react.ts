@@ -49,6 +49,7 @@ export interface UserProfile {
   providerType?: ProviderType;
   roles: string[];
   accessToken: string;
+  refreshToken?: string;
   name?: string; // Tùy chọn hiển thị tên thân thiện cho UI (fallback = username)
 }
 
