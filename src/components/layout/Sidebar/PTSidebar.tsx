@@ -4,7 +4,6 @@ import {
   Calendar,
   Users,
   FileSignature,
-  CreditCard,
   TrendingUp,
   ClipboardList,
   Database,
@@ -14,6 +13,7 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
+  Crown,
 } from 'lucide-react';
 import logo from '../../../assets/logo/logo-zenfit.png';
 
@@ -34,7 +34,7 @@ export default function PTSidebar({
     { to: '/pt/clients', label: 'Học viên', icon: Users, end: true },
     { to: '/pt/contracts', label: 'Hợp đồng PT', icon: FileSignature },
     { to: '/pt/revenue', label: 'Doanh thu', icon: Database },
-    { to: '/pt/packages', label: 'Gói tập & thanh toán', icon: CreditCard },
+    { to: '/pt/subscription', label: 'Gói dịch vụ & Hạn mức', icon: Crown },
     { to: '/pt/progress', label: 'Tiến độ & số đo', icon: TrendingUp },
     { to: '/pt/plans', label: 'Giáo án & dinh dưỡng', icon: ClipboardList },
     { to: '/pt/profile', label: 'Hồ sơ PT', icon: User },

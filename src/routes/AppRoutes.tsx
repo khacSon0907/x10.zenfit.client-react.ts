@@ -18,7 +18,7 @@ import ContractDetailPage from '../pages/pt/ContractDetailPage';
 import ClientDetailPage from '../pages/pt/ClientDetailPage';
 import SchedulePage from '../pages/pt/SchedulePage';
 import TrialsRenewalsPage from '../pages/pt/TrialsRenewalsPage';
-import PackagesPaymentsPage from '../pages/pt/PackagesPaymentsPage';
+import PTSubscriptionPricingPage from '../pages/pt/PTSubscriptionPricingPage';
 import ProgressPage from '../pages/pt/ProgressPage';
 import PlansPage from '../pages/pt/PlansPage';
 import RevenuePage from '../pages/pt/RevenuePage';
@@ -147,7 +147,9 @@ export default function AppRoutes() {
         <Route path="contracts/:id" element={<ContractDetailPage />} />
         <Route path="schedule" element={<SchedulePage />} />
         <Route path="renewals" element={<TrialsRenewalsPage />} />
-        <Route path="packages" element={<PackagesPaymentsPage />} />
+        <Route path="packages" element={<PTSubscriptionPricingPage />} />
+        <Route path="subscription" element={<PTSubscriptionPricingPage />} />
+        <Route path="pricing" element={<PTSubscriptionPricingPage />} />
         <Route path="progress" element={<ProgressPage />} />
         <Route path="plans" element={<PlansPage />} />
         <Route path="revenue" element={<RevenuePage />} />
@@ -169,6 +171,7 @@ export default function AppRoutes() {
         <Route path="pts" element={<AdminPTManagementPage />} />
         <Route path="clients" element={<AdminOverviewPage />} />
         <Route path="plans" element={<AdminSubscriptionPlansPage />} />
+        <Route path="subscription-plans" element={<AdminSubscriptionPlansPage />} />
         <Route path="schedule" element={<SchedulePage />} />
         <Route path="payments" element={<AdminFeePaymentsPage />} />
         <Route path="settings" element={<AdminOverviewPage />} />
