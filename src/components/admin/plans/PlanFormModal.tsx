@@ -210,7 +210,7 @@ export default function PlanFormModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-purple-200 mb-1.5">
-                Mã gói dịch vụ (Code) <span className="text-red-400">*</span>
+                Mã gói dịch vụ <span className="text-red-400">*</span>
               </label>
               <div className="relative">
                 <input
@@ -218,7 +218,7 @@ export default function PlanFormModal({
                   disabled={isEdit}
                   value={code}
                   onChange={(e) => setCode(e.target.value.toUpperCase())}
-                  placeholder="VD: FREE_TIER, PLUS_MONTHLY"
+                  placeholder="VD: GOI_FREE, GOI_PLUS, GOI_PRO"
                   className={`w-full px-3.5 py-2.5 rounded-xl bg-[#1b0d38] border ${
                     errors.code ? 'border-red-500' : 'border-purple-500/20'
                   } focus:outline-none focus:border-purple-400 text-white placeholder-purple-300/30 uppercase ${
@@ -245,7 +245,7 @@ export default function PlanFormModal({
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="VD: Gói Khởi Nghiệp (Free), Gói Pro"
+                placeholder="VD: Gói Khởi Nghiệp, Gói Tiêu Chuẩn, Gói Chuyên Nghiệp"
                 className={`w-full px-3.5 py-2.5 rounded-xl bg-[#1b0d38] border ${
                   errors.name ? 'border-red-500' : 'border-purple-500/20'
                 } focus:outline-none focus:border-purple-400 text-white placeholder-purple-300/30`}
@@ -329,7 +329,7 @@ export default function PlanFormModal({
             <div>
               <label className="block text-xs font-semibold text-purple-200 mb-1.5 flex items-center justify-between">
                 <span className="flex items-center gap-1.5">
-                  <Users className="w-3.5 h-3.5 text-purple-400" /> Giới hạn học viên (Max) <span className="text-red-400">*</span>
+                  <Users className="w-3.5 h-3.5 text-purple-400" /> Số học viên tối đa <span className="text-red-400">*</span>
                 </span>
                 <span className="text-[11px] font-semibold text-purple-300">
                   {maxStudents} học viên
@@ -387,15 +387,15 @@ export default function PlanFormModal({
                 onChange={(e) => setStatus(e.target.value as SubscriptionPlanStatus)}
                 className="w-full px-3.5 py-2.5 rounded-xl bg-[#1b0d38] border border-purple-500/20 focus:outline-none focus:border-purple-400 text-white"
               >
-                <option value="ACTIVE">🟢 Đang hoạt động (ACTIVE)</option>
-                <option value="INACTIVE">⚪ Tạm ẩn / Ngừng kinh doanh (INACTIVE)</option>
-                <option value="ARCHIVED">🔴 Lưu trữ / Đóng gói (ARCHIVED)</option>
+                <option value="ACTIVE">🟢 Đang hoạt động</option>
+                <option value="INACTIVE">⚪ Tạm ẩn / Ngừng kinh doanh</option>
+                <option value="ARCHIVED">🔴 Đã lưu trữ / Đóng gói</option>
               </select>
             </div>
 
             <div>
               <label className="block text-xs font-semibold text-purple-200 mb-1.5">
-                Thứ tự sắp xếp (Display Order)
+                Thứ tự hiển thị
               </label>
               <input
                 type="number"

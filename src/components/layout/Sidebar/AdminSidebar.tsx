@@ -87,7 +87,7 @@ export default function AdminSidebar({
                 Zen<span className="text-purple-400">Fit</span>
               </span>
               <span className="block text-[9px] font-semibold tracking-wider text-purple-300/70 uppercase mt-1 truncate">
-                Train Better. Live Healthier.
+                Rèn luyện tốt hơn. Sống khỏe mạnh hơn.
               </span>
             </div>
           )}
@@ -289,7 +289,7 @@ export default function AdminSidebar({
           <div>
             <span className="font-bold text-xs text-white block">ZenFit</span>
             <span className="text-[10px] text-purple-200/70 leading-tight block mt-0.5">
-              Build a stronger community together.
+              Cùng nhau xây dựng cộng đồng vững mạnh.
             </span>
           </div>
           <div className="h-8 w-8 rounded-xl bg-purple-600/30 flex items-center justify-center text-purple-300 shrink-0">

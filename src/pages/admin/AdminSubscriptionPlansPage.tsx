@@ -88,7 +88,12 @@ export default function AdminSubscriptionPlansPage() {
 
     try {
       await subscriptionPlanApi.updatePlanStatus(plan.id, { status: newStatus });
-      toast.success(`Đã đổi trạng thái gói "${plan.name}" sang ${newStatus}`);
+      const statusLabels: Record<SubscriptionPlanStatus, string> = {
+        ACTIVE: 'Hoạt động',
+        INACTIVE: 'Tạm ẩn',
+        ARCHIVED: 'Lưu trữ',
+      };
+      toast.success(`Đã đổi trạng thái gói "${plan.name}" sang "${statusLabels[newStatus]}"`);
       fetchPlans();
     } catch (err: unknown) {
       const errRes = (err as { response?: { data?: { message?: string } } })?.response?.data;
@@ -217,7 +222,7 @@ export default function AdminSubscriptionPlansPage() {
         <div className="p-5 rounded-2xl bg-[#120826]/90 border border-purple-500/15 shadow-lg backdrop-blur-md relative overflow-hidden group hover:border-purple-500/30 transition-all">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-purple-300/70">Đang hoạt động (ACTIVE)</p>
+              <p className="text-xs font-medium text-purple-300/70">Gói đang hoạt động</p>
               <h3 className="text-2xl font-extrabold text-emerald-400 mt-1">{activeCount}</h3>
               <p className="text-[11px] text-emerald-400/80 mt-1">Hiển thị trên bảng giá PT</p>
             </div>
@@ -236,7 +241,7 @@ export default function AdminSubscriptionPlansPage() {
                 {defaultPlan?.name || 'Chưa thiết lập'}
               </h3>
               <p className="text-[11px] text-purple-300/60 mt-1">
-                Mã: <code className="text-amber-300">{defaultPlan?.code || 'N/A'}</code>
+                Mã: <code className="text-amber-300">{defaultPlan?.code || 'Chưa thiết lập'}</code>
               </p>
             </div>
             <div className="w-11 h-11 rounded-xl bg-amber-500/15 border border-amber-500/25 text-amber-400 flex items-center justify-center">
@@ -249,7 +254,7 @@ export default function AdminSubscriptionPlansPage() {
         <div className="p-5 rounded-2xl bg-[#120826]/90 border border-purple-500/15 shadow-lg backdrop-blur-md relative overflow-hidden group hover:border-purple-500/30 transition-all">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-purple-300/70">Hạn mức học viên Free</p>
+              <p className="text-xs font-medium text-purple-300/70">Hạn mức học viên miễn phí</p>
               <h3 className="text-2xl font-extrabold text-white mt-1">
                 {defaultPlan?.maxStudents ?? 5}{' '}
                 <span className="text-xs font-normal text-purple-300/60">học viên</span>

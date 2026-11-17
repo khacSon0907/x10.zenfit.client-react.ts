@@ -131,7 +131,7 @@ export default function AdminOverviewPage() {
         <StatCard
           title="Tỉ lệ nâng cấp trả phí"
           value="50%"
-          subtitle="2/4 PT dùng Plus hoặc Pro"
+          subtitle="2/4 PT dùng gói Nâng cao hoặc Chuyên nghiệp"
           icon={<TrendingUp className="h-5 w-5" />}
           highlightColor="amber"
           className="bg-white dark:bg-[#120826]/90 border-slate-200 dark:border-purple-500/15 shadow-xs"
@@ -275,11 +275,11 @@ export default function AdminOverviewPage() {
                       <td className="py-3.5 px-4">
                         {isGoogle ? (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-800/40">
-                            Google OAuth
+                            Tài khoản Google
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                            Email & Password
+                            Email & Mật khẩu
                           </span>
                         )}
                       </td>
@@ -335,7 +335,7 @@ export default function AdminOverviewPage() {
           Quy chuẩn phân quyền dữ liệu nội bộ
         </h2>
         <p className="text-xs text-slate-600 dark:text-purple-300/70 leading-relaxed">
-          Khu vực Admin quản lý số lượng người dùng nền tảng, tài khoản huấn luyện viên, gói đăng ký (Free/Plus/Pro), tình trạng thanh toán và log hệ thống. Admin hoàn toàn không can thiệp vào dữ liệu tập luyện cá nhân bí mật của các PT theo đúng cam kết bảo mật.
+          Khu vực Admin quản lý số lượng người dùng nền tảng, tài khoản huấn luyện viên, gói đăng ký (Miễn phí / Nâng cao / Chuyên nghiệp), tình trạng thanh toán và nhật ký hệ thống. Admin hoàn toàn không can thiệp vào dữ liệu tập luyện cá nhân bí mật của các PT theo đúng cam kết bảo mật.
         </p>
       </div>
     </div>

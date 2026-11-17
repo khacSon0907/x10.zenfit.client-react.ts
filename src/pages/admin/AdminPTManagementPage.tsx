@@ -169,17 +169,17 @@ export default function AdminPTManagementPage() {
                     {/* Gói Badge (Free / Plus / Pro with custom colors) */}
                     {pt.planName === 'Free' && (
                       <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#2a1352] text-purple-300 border border-purple-500/40">
-                        Gói Free
+                        Gói Miễn phí
                       </span>
                     )}
                     {pt.planName === 'Plus' && (
                       <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#0c2e63] text-blue-300 border border-blue-500/40">
-                        Gói Plus
+                        Gói Nâng cao
                       </span>
                     )}
                     {pt.planName === 'Pro' && (
                       <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#0a3826] text-emerald-300 border border-emerald-500/40">
-                        Gói Pro
+                        Gói Chuyên nghiệp
                       </span>
                     )}
 
@@ -326,9 +326,9 @@ export default function AdminPTManagementPage() {
                   onChange={(e) => setPlanName(e.target.value as 'Free' | 'Plus' | 'Pro')}
                   className="w-full px-3.5 py-2 text-sm rounded-xl border border-purple-500/25 bg-[#1b0e36] text-white focus:outline-none focus:border-purple-400"
                 >
-                  <option value="Free">Gói Free (Tối đa 5 học viên)</option>
-                  <option value="Plus">Gói Plus (Tối đa 25 học viên)</option>
-                  <option value="Pro">Gói Pro (Tối đa 50 học viên)</option>
+                  <option value="Free">Gói Miễn phí (Tối đa 5 học viên)</option>
+                  <option value="Plus">Gói Nâng cao (Tối đa 25 học viên)</option>
+                  <option value="Pro">Gói Chuyên nghiệp (Tối đa 50 học viên)</option>
                 </select>
               </div>
 
