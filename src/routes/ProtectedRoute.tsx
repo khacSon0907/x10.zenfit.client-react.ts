@@ -2,7 +2,7 @@ import { type ReactNode } from 'react';
 import { Navigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import SplashLoader from '../shared/components/ui/SplashLoader';
-import { isAdminUser } from '../shared/utils/roleUtils';
+import { isAdminUser, getDefaultRedirectRoute } from '../shared/utils/roleUtils';
 
 /**
  * ============================================================================
@@ -10,7 +10,9 @@ import { isAdminUser } from '../shared/utils/roleUtils';
  * ============================================================================
  * 1. Kiểm tra trạng thái khởi tạo (isLoading): Hiển thị SplashLoader nếu đang refresh
  * 2. Kiểm tra xác thực (isAuthenticated): Nếu chưa login, chuyển hướng về /login
- * 3. Kiểm tra phân quyền (allowedRoles):
+ * 3. Kiểm tra emailVerified: Nếu chưa xác thực email, bắt buộc chuyển về /verify-otp
+ * 4. Kiểm tra subscriptionConfirmed: Nếu chưa chọn gói, bắt buộc chuyển về /select-subscription
+ * 5. Kiểm tra phân quyền (allowedRoles):
  *    - Hỗ trợ linh hoạt cả định dạng 'ADMIN', 'ROLE_ADMIN', 'USER', 'PT',...
  *    - Nếu ADMIN vào nhầm trang không được phép -> tự chuyển về /admin/overview
  *    - Nếu USER cố vào trang ADMIN -> chuyển về /403
@@ -35,7 +37,26 @@ export default function ProtectedRoute({ allowedRoles, children }: ProtectedRout
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // 3. Kiểm tra quyền hạn theo danh sách Role được chỉ định
+  // 3. Nếu chưa xác thực email -> Chuyển hướng sang màn xác thực OTP
+  if (user.emailVerified === false && location.pathname !== '/verify-otp') {
+    return <Navigate to="/verify-otp" replace />;
+  }
+
+  const isAdmin = isAdminUser(user);
+
+  // 4. Nếu chưa chọn gói dịch vụ (subscriptionConfirmed === false) -> Bắt buộc chặn và chuyển sang /select-subscription
+  if (!isAdmin && user.subscriptionConfirmed === false) {
+    if (location.pathname !== '/select-subscription') {
+      return <Navigate to="/select-subscription" replace />;
+    }
+  }
+
+  // 5. Nếu đã chọn gói (hoặc là ADMIN) mà vẫn cố tình vào /select-subscription -> Chuyển về màn hình tương ứng
+  if ((isAdmin || user.subscriptionConfirmed === true) && location.pathname === '/select-subscription') {
+    return <Navigate to={getDefaultRedirectRoute(user)} replace />;
+  }
+
+  // 6. Kiểm tra quyền hạn theo danh sách Role được chỉ định
   if (allowedRoles && allowedRoles.length > 0) {
     const rawRoles: string[] = [];
     if (Array.isArray(user.roles)) rawRoles.push(...user.roles);
@@ -63,6 +84,6 @@ export default function ProtectedRoute({ allowedRoles, children }: ProtectedRout
     }
   }
 
-  // 4. Hợp lệ -> Render Component con hoặc Outlet cho lồng route
+  // 7. Hợp lệ -> Render Component con hoặc Outlet cho lồng route
   return children ? <>{children}</> : <Outlet />;
 }

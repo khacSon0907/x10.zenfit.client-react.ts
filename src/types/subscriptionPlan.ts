@@ -71,3 +71,29 @@ export interface ApiResponse<T> {
   };
 }
 
+export interface SelectPlanRequest {
+  planId: string;
+  autoRenew?: boolean;
+}
+
+export interface UserSubscriptionResponse {
+  id: string;
+  userId: string;
+  planId: string;
+  planName?: string;
+  planCode?: string;
+  status: 'ACTIVE' | 'EXPIRED' | 'CANCELLED';
+  startAt?: string;
+  endAt?: string;
+  price?: number;
+  maxStudents?: number;
+  currentStudents?: number;
+  autoRenew?: boolean;
+  paidAt?: string;
+  transactionId?: string;
+  isExpired?: boolean;
+  daysRemaining?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+

@@ -43,6 +43,7 @@ export interface AuthContextType extends AuthState {
   handleOAuth2Callback: (code: string) => Promise<UserProfile>;
   logout: () => Promise<void>;
   refreshSession: () => Promise<UserProfile | null>;
+  setSubscriptionConfirmed: (confirmed: boolean) => void;
   // Các hàm tiện ích hỗ trợ xác thực mở rộng
   register: (data: CreateUserReq) => Promise<ApiResponse<RegisterResponse>>;
   verifyOtp: (data: VerifyOtpReq) => Promise<ApiResponse<null | void>>;
@@ -180,6 +181,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             avatarUrl: meData.avatarUrl,
             roles: prev.roles,
             accessToken: prev.accessToken,
+            subscriptionConfirmed:
+              meData.subscriptionConfirmed !== undefined
+                ? meData.subscriptionConfirmed
+                : prev.subscriptionConfirmed,
           };
           try {
             localStorage.setItem('zenfit_user', JSON.stringify(updated));
@@ -323,6 +328,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return authApi.changePassword(data);
   };
 
+  const setSubscriptionConfirmed = useCallback((confirmed: boolean) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const updated: UserProfile = {
+        ...prev,
+        subscriptionConfirmed: confirmed,
+      };
+      try {
+        localStorage.setItem('zenfit_user', JSON.stringify(updated));
+      } catch {
+        // ignore
+      }
+      return updated;
+    });
+  }, []);
+
   const contextValue: AuthContextType = {
     user,
     accessToken,
@@ -334,6 +355,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     handleOAuth2Callback,
     logout,
     refreshSession,
+    setSubscriptionConfirmed,
     register,
     verifyOtp,
     forgotPassword,

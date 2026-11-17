@@ -125,14 +125,23 @@ export const getUserRoleLabel = (
 
 /**
  * Điều hướng mặc định sau đăng nhập hoặc truy cập trang chủ:
+ * - Nếu chưa verify email -> /verify-otp
  * - ADMIN -> /admin/overview
- * - Tất cả các vai trò còn lại (HEAD_OF_TRAINING, TEAM_MANAGER, PT) -> /pt/today
+ * - PT/User chưa chọn gói (subscriptionConfirmed === false) -> /select-subscription
+ * - Tất cả các vai trò còn lại đã xác nhận gói -> /pt/today
  */
 export const getDefaultRedirectRoute = (
-  user: { roles?: string[]; role?: string } | null | undefined
+  user: { roles?: string[]; role?: string; subscriptionConfirmed?: boolean; emailVerified?: boolean } | null | undefined
 ): string => {
+  if (!user) return '/login';
+  if (user.emailVerified === false) {
+    return '/verify-otp';
+  }
   if (isAdminUser(user)) {
     return '/admin/overview';
+  }
+  if (user.subscriptionConfirmed === false) {
+    return '/select-subscription';
   }
   return '/pt/today';
 };

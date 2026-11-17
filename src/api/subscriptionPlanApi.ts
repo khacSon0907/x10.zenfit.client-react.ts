@@ -6,6 +6,8 @@ import type {
   UpdateSubscriptionPlanStatusRequest,
   SubscriptionPlanFilterQuery,
   PaginatedResult,
+  SelectPlanRequest,
+  UserSubscriptionResponse,
 } from '../types/subscriptionPlan';
 import type { ApiResponse } from '../types/auth';
 
@@ -100,6 +102,29 @@ export const subscriptionPlanApi = {
    */
   deletePlan: async (id: string): Promise<void> => {
     await axiosClient.delete<ApiResponse<void>>(`/api/subscription-plans/${id}`);
+  },
+
+  /**
+   * 9. Người dùng chọn và kích hoạt gói thuê bao
+   * POST /api/user-subscriptions/select
+   */
+  selectSubscription: async (data: SelectPlanRequest): Promise<UserSubscriptionResponse> => {
+    const res = await axiosClient.post<ApiResponse<UserSubscriptionResponse>>(
+      '/api/user-subscriptions/select',
+      data
+    );
+    return res.data.data;
+  },
+
+  /**
+   * 10. Lấy thông tin gói dịch vụ hiện tại của người dùng
+   * GET /api/user-subscriptions/me
+   */
+  getMySubscription: async (): Promise<UserSubscriptionResponse> => {
+    const res = await axiosClient.get<ApiResponse<UserSubscriptionResponse>>(
+      '/api/user-subscriptions/me'
+    );
+    return res.data.data;
   },
 };
 

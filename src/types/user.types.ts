@@ -27,6 +27,7 @@ export interface UserProfile {
   createdAt: string;
   updatedAt: string;
   emailVerified: boolean;
+  subscriptionConfirmed?: boolean;
   verifiedAt: string | null;
   avatarUrl: string | null;
   birthday: string | null;

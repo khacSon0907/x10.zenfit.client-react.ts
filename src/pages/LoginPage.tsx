@@ -91,19 +91,33 @@ export default function LoginPage() {
       const user = await login({ email: cleanEmail, password });
       toast.success(`Đăng nhập thành công! Chào mừng ${user.name || user.username}.`);
 
-      // Lấy đường dẫn trước đó nếu được chuyển hướng từ ProtectedRoute
+      // 1. Kiểm tra Email: nếu chưa verify email -> chuyển sang OTP
+      if (user.emailVerified === false) {
+        navigate('/verify-otp', { replace: true });
+        return;
+      }
+
+      // 2. Nếu là Admin -> Chuyển thẳng về tổng quan quản trị
+      if (isAdminUser(user)) {
+        navigate('/admin/overview', { replace: true });
+        return;
+      }
+
+      // 3. Nếu chưa chọn gói (subscriptionConfirmed === false) -> Bắt buộc chuyển sang /select-subscription
+      if (user.subscriptionConfirmed === false) {
+        navigate('/select-subscription', { replace: true });
+        return;
+      }
+
+      // 4. Lấy đường dẫn trước đó nếu có
       const fromPath = (location.state as { from?: { pathname: string } })?.from?.pathname;
-      if (fromPath && fromPath !== '/login') {
+      if (fromPath && fromPath !== '/login' && fromPath !== '/select-subscription') {
         navigate(fromPath, { replace: true });
         return;
       }
 
-      // Điều hướng trực tiếp theo vai trò: Admin -> /admin/overview, User/PT -> /pt/today
-      if (isAdminUser(user)) {
-        navigate('/admin/overview', { replace: true });
-      } else {
-        navigate('/pt/today', { replace: true });
-      }
+      // 5. Vào màn hình làm việc PT bình thường
+      navigate('/pt/today', { replace: true });
     } catch (error) {
       const message = getFriendlyErrorMessage(
         error,

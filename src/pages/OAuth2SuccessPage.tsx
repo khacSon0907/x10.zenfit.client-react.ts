@@ -53,16 +53,20 @@ export default function OAuth2SuccessPage() {
 
         toast.success(`Đăng nhập thành công! Chào mừng ${user.name || user.username}.`);
 
-        // Lấy redirect path đã lưu trước đó nếu có, còn không mặc định chuyển vào màn hình PT /pt/today
+        // Lấy redirect path đã lưu trước đó nếu có
         const savedRedirect = sessionStorage.getItem('zenfit_redirect_after_login');
         sessionStorage.removeItem('zenfit_redirect_after_login');
 
-        const targetPath =
-          savedRedirect && savedRedirect !== '/' && savedRedirect !== '/login'
-            ? savedRedirect
-            : isAdminUser(user)
-              ? '/admin/overview'
-              : '/pt/today';
+        let targetPath: string;
+        if (isAdminUser(user)) {
+          targetPath = '/admin/overview';
+        } else if (user.subscriptionConfirmed === false) {
+          targetPath = '/select-subscription';
+        } else if (savedRedirect && savedRedirect !== '/' && savedRedirect !== '/login' && savedRedirect !== '/select-subscription') {
+          targetPath = savedRedirect;
+        } else {
+          targetPath = '/pt/today';
+        }
 
         navigate(targetPath, { replace: true });
       } catch (error) {

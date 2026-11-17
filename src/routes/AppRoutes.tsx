@@ -5,6 +5,7 @@ import RegisterPage from '../features/auth/pages/RegisterPage';
 import ForgotPasswordPage from '../features/auth/pages/ForgotPasswordPage';
 import VerifyOtpPage from '../features/auth/pages/VerifyOtpPage';
 import OAuth2SuccessPage from '../pages/OAuth2SuccessPage';
+import SelectSubscriptionPage from '../pages/auth/SelectSubscriptionPage';
 import ForbiddenPage from '../pages/ForbiddenPage';
 import ProtectedRoute from './ProtectedRoute';
 
@@ -112,6 +113,16 @@ export default function AppRoutes() {
       {/* Google OAuth2 Callback Routes */}
       <Route path="/oauth2/success" element={<OAuth2SuccessPage />} />
       <Route path="/oauth2/callback" element={<OAuth2SuccessPage />} />
+
+      {/* Màn hình bắt buộc chọn gói dịch vụ (Subscription Confirmed) */}
+      <Route
+        path="/select-subscription"
+        element={
+          <ProtectedRoute>
+            <SelectSubscriptionPage />
+          </ProtectedRoute>
+        }
+      />
       
       {/* Trang 403 Forbidden */}
       <Route path="/403" element={<ForbiddenPage />} />
