@@ -169,10 +169,12 @@ export default function AppRoutes() {
         <Route index element={<Navigate to="overview" replace />} />
         <Route path="overview" element={<AdminOverviewPage />} />
         <Route path="pts" element={<AdminPTManagementPage />} />
-        <Route path="clients" element={<AdminOverviewPage />} />
+        <Route path="users" element={<Navigate to="/admin/pts" replace />} />
+        <Route path="clients" element={<Navigate to="/admin/pts" replace />} />
         <Route path="plans" element={<AdminSubscriptionPlansPage />} />
+        <Route path="packages" element={<AdminSubscriptionPlansPage />} />
         <Route path="subscription-plans" element={<AdminSubscriptionPlansPage />} />
-        <Route path="schedule" element={<SchedulePage />} />
+        <Route path="schedule" element={<Navigate to="/admin/overview" replace />} />
         <Route path="payments" element={<AdminFeePaymentsPage />} />
         <Route path="settings" element={<AdminOverviewPage />} />
         <Route path="reports" element={<AdminOverviewPage />} />

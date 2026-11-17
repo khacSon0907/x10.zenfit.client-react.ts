@@ -3,9 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import {
   TrendingUp,
   Dumbbell,
-  Users,
   Crown,
-  Calendar,
   CreditCard,
   Settings,
   BarChart2,
@@ -44,9 +42,7 @@ export default function AdminSidebar({
   // Group 2: Quản lý nghiệp vụ
   const businessItems = [
     { to: '/admin/pts', label: 'Quản lý PT', icon: Dumbbell, hasArrow: true },
-    { to: '/admin/clients', label: 'Quản lý học viên', icon: Users },
     { to: '/admin/plans', label: 'Quản lý gói đăng ký', icon: Crown },
-    { to: '/admin/schedule', label: 'Quản lý lịch tập', icon: Calendar },
     { to: '/admin/payments', label: 'Quản lý thanh toán', icon: CreditCard },
   ];
 

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Crown,
   Plus,
@@ -41,6 +42,15 @@ export default function AdminSubscriptionPlansPage() {
   const [planToEdit, setPlanToEdit] = useState<SubscriptionPlan | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [planToDelete, setPlanToDelete] = useState<SubscriptionPlan | null>(null);
+
+  // Read URL search params (e.g. ?action=create)
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get('action') === 'create' || searchParams.get('create') === 'true') {
+      setIsFormModalOpen(true);
+    }
+  }, [searchParams]);
 
   // Fetch admin plans with pagination
   const fetchPlans = useCallback(async () => {
