@@ -14,7 +14,8 @@ import { toast } from 'sonner';
 import logo from '../../assets/logo/logo-zenfit.png';
 import { useAuth } from '../../context/AuthContext';
 import subscriptionPlanApi from '../../api/subscriptionPlanApi';
-import type { SubscriptionPlan } from '../../types/subscriptionPlan';
+import type { SubscriptionPlan, UserSubscriptionResponse } from '../../types/subscription';
+import PaymentQRModal from '../../components/subscription/PaymentQRModal';
 
 export default function SelectSubscriptionPage() {
   const { user, logout, setSubscriptionConfirmed } = useAuth();
@@ -24,6 +25,10 @@ export default function SelectSubscriptionPage() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [submittingPlanId, setSubmittingPlanId] = useState<string | null>(null);
+
+  // State cho Modal thanh toán QR PayOS
+  const [selectedSubscription, setSelectedSubscription] = useState<UserSubscriptionResponse | null>(null);
+  const [isQRModalOpen, setIsQRModalOpen] = useState<boolean>(false);
 
   // Fetch danh sách các gói ACTIVE
   const fetchPlans = async () => {
@@ -73,21 +78,24 @@ export default function SelectSubscriptionPage() {
 
     setSubmittingPlanId(plan.id);
     try {
-      await subscriptionPlanApi.selectSubscription({
+      const data = await subscriptionPlanApi.selectSubscription({
         planId: plan.id,
         autoRenew: false,
       });
 
-      // 1. Cập nhật auth state subscriptionConfirmed = true
-      setSubscriptionConfirmed(true);
+      // 1. Gói Miễn Phí (status === 'ACTIVE' hoặc price === 0): Kích hoạt ngay
+      if (data.status === 'ACTIVE' || !data.price || data.price === 0) {
+        setSubscriptionConfirmed(true);
+        toast.success(
+          `Kích hoạt gói "${plan.name}" thành công! Chào mừng bạn gia nhập ZenFit.`
+        );
+        navigate('/pt/today', { replace: true });
+        return;
+      }
 
-      // 2. Thông báo thành công
-      toast.success(
-        `Kích hoạt gói "${plan.name}" thành công! Chào mừng bạn gia nhập ZenFit.`
-      );
-
-      // 3. Điều hướng vào màn hình làm việc chính
-      navigate('/pt/today', { replace: true });
+      // 2. Gói Trả Phí (status === 'PENDING'): Mở Modal quét mã QR PayOS
+      setSelectedSubscription(data);
+      setIsQRModalOpen(true);
     } catch (err: unknown) {
       console.error('Lỗi khi chọn gói dịch vụ:', err);
       const apiErr = err as { response?: { data?: { message?: string } } };
@@ -375,6 +383,20 @@ export default function SelectSubscriptionPage() {
           </p>
         </div>
       </main>
+
+      {/* Modal Quét Mã QR Thanh toán PayOS & Lắng nghe WebSocket */}
+      <PaymentQRModal
+        isOpen={isQRModalOpen}
+        onClose={() => setIsQRModalOpen(false)}
+        subscriptionData={selectedSubscription}
+        userId={user?.id || ''}
+        onSuccess={() => {
+          setIsQRModalOpen(false);
+          setSubscriptionConfirmed(true);
+          toast.success('Thanh toán thành công! Chào mừng bạn đến với ZenFit.');
+          navigate('/pt/today', { replace: true });
+        }}
+      />
     </div>
   );
 }

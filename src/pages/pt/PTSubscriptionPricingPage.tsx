@@ -394,6 +394,7 @@ export default function PTSubscriptionPricingPage() {
         onClose={() => setIsUpgradeModalOpen(false)}
         plan={selectedPlanForUpgrade}
         currentStudentCount={studentCount}
+        onPlanActivated={loadData}
       />
     </div>
   );

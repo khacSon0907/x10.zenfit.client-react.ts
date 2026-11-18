@@ -82,7 +82,7 @@ export interface UserSubscriptionResponse {
   planId: string;
   planName?: string;
   planCode?: string;
-  status: 'ACTIVE' | 'EXPIRED' | 'CANCELLED';
+  status: 'PENDING' | 'ACTIVE' | 'EXPIRED' | 'CANCELLED';
   startAt?: string;
   endAt?: string;
   price?: number;
@@ -91,9 +91,21 @@ export interface UserSubscriptionResponse {
   autoRenew?: boolean;
   paidAt?: string;
   transactionId?: string;
+  payosOrderCode?: number;
+  checkoutUrl?: string;
+  qrCode?: string; // Chuỗi VietQR do PayOS trả về
   isExpired?: boolean;
   daysRemaining?: number;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface PaymentSocketMessage {
+  orderId?: string;
+  orderCode?: number;
+  paymentStatus: 'PAID' | 'FAILED' | 'PENDING';
+  success: boolean;
+  message: string;
+  amount?: number;
 }
 
