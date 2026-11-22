@@ -50,26 +50,35 @@ export const clientApi = {
    * GET /api/clients/search?keyword=...
    * 
    * @param keyword Từ khoá tìm kiếm
+   * @param trainerId ID của PT nếu cần lọc theo huấn luyện viên
    * @returns Danh sách khách hàng phù hợp
    */
-  searchClients: async (keyword: string): Promise<ClientResponse[]> => {
+  searchClients: async (keyword: string, trainerId?: string): Promise<ClientResponse[]> => {
     if (!keyword.trim()) return [];
+    const params: Record<string, string> = { keyword: keyword.trim() };
+    if (trainerId) {
+      params.trainerId = trainerId;
+    }
     const response = await axiosClient.get<ApiResponse<ClientResponse[]>>('/api/clients/search', {
-      params: { keyword: keyword.trim() },
+      params,
     });
     return response.data.data ?? [];
   },
 
   /**
-   * Lấy danh sách tất cả khách hàng (có thể lọc theo PT được gán)
+   * Lấy danh sách tất cả khách hàng (bắt buộc cách ly theo PT được gán)
    * GET /api/clients
    * 
    * @param trainerId ID của PT nếu cần lọc theo huấn luyện viên
    * @returns Danh sách hồ sơ khách hàng
    */
   getAllClients: async (trainerId?: string): Promise<ClientResponse[]> => {
+    const params: Record<string, string> = {};
+    if (trainerId) {
+      params.trainerId = trainerId;
+    }
     const response = await axiosClient.get<ApiResponse<ClientResponse[]>>('/api/clients', {
-      params: trainerId ? { trainerId } : undefined,
+      params: Object.keys(params).length > 0 ? params : undefined,
     });
     return response.data.data ?? [];
   },

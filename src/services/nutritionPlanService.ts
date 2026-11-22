@@ -182,16 +182,16 @@ export const nutritionPlanService = {
 
   /**
    * 12. Lấy danh sách học viên của PT (hỗ trợ dropdown chọn Client khi tạo kế hoạch)
-   * GET /api/clients/my-clients hoặc fallback GET /api/clients
+   * GET /api/clients (tự động phân quyền và cách ly dữ liệu theo PT đăng nhập)
    */
-  getMyClients: async (): Promise<ClientResponse[]> => {
+  getMyClients: async (trainerId?: string): Promise<ClientResponse[]> => {
     try {
-      const res = await axiosClient.get<ApiResponse<ClientResponse[]>>('/api/clients/my-clients');
+      const res = await axiosClient.get<ApiResponse<ClientResponse[]>>('/api/clients', {
+        params: trainerId ? { trainerId } : undefined,
+      });
       return res.data.data ?? [];
     } catch {
-      // Fallback nếu endpoint /my-clients chưa được tạo
-      const fallback = await axiosClient.get<ApiResponse<ClientResponse[]>>('/api/clients');
-      return fallback.data.data ?? [];
+      return [];
     }
   },
 };

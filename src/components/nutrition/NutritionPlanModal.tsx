@@ -20,6 +20,7 @@ import type {
 } from '../../types/nutrition';
 import { NUTRITION_PLAN_STATUS_CONFIG } from '../../types/nutrition';
 import type { ClientResponse } from '../../types/client.types';
+import { useAuth } from '../../context/AuthContext';
 
 interface NutritionPlanModalProps {
   isOpen: boolean;
@@ -36,6 +37,7 @@ export default function NutritionPlanModal({
   defaultClientId,
   onSaved,
 }: NutritionPlanModalProps) {
+  const { user: authUser } = useAuth();
   const isEditing = Boolean(planToEdit);
 
   // Form states
@@ -66,7 +68,7 @@ export default function NutritionPlanModal({
     const loadClients = async () => {
       try {
         setLoadingClients(true);
-        const data = await nutritionPlanService.getMyClients();
+        const data = await nutritionPlanService.getMyClients(authUser?.id);
         setClients(data);
       } catch (err) {
         console.error('Failed to load clients:', err);

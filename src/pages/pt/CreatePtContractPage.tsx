@@ -156,9 +156,9 @@ export default function CreatePtContractPage() {
   // Tải danh sách khách hàng nếu chưa có
   useEffect(() => {
     if (clients.length === 0) {
-      fetchClients();
+      fetchClients(authUser?.id);
     }
-  }, [clients.length, fetchClients]);
+  }, [clients.length, fetchClients, authUser?.id]);
 
   // Cập nhật trainerId khi authUser sẵn sàng
   useEffect(() => {

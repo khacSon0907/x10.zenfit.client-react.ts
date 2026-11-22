@@ -188,10 +188,17 @@ export default function ClientDetailPage() {
       });
     } catch (err: unknown) {
       console.error('Lỗi khi tải chi tiết khách hàng:', err);
+      const axiosErr = err as { response?: { status?: number; data?: { message?: string } } };
+      if (axiosErr.response?.status === 403) {
+        toast.error('Bạn không có quyền truy cập học viên này (thuộc quyền quản lý của PT khác)');
+        navigate('/pt/clients');
+        return;
+      }
       const message =
-        err instanceof Error ? err.message : 'Không thể tải thông tin hồ sơ khách hàng';
+        axiosErr.response?.data?.message ||
+        (err instanceof Error ? err.message : 'Không thể tải thông tin hồ sơ khách hàng');
       setError(message);
-      toast.error('Không tìm thấy hoặc có lỗi khi tải hồ sơ khách hàng');
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }

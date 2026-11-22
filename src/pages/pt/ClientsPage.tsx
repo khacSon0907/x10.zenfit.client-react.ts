@@ -16,6 +16,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { useAuth } from '../../context/AuthContext';
 import type {
   ClientStatus,
   // FitnessGoal
@@ -27,6 +28,7 @@ import {
 } from '../../types/client.types';
 
 export default function ClientsPage() {
+  const { user: authUser } = useAuth();
   const {
     clients,
     isLoadingClients,
@@ -48,9 +50,9 @@ export default function ClientsPage() {
 
   // Tự động tải lại dữ liệu khi trang mount nếu danh sách rỗng
   useEffect(() => {
-    fetchClients();
+    fetchClients(authUser?.id);
     fetchMySubscription();
-  }, [fetchClients, fetchMySubscription]);
+  }, [authUser?.id, fetchClients, fetchMySubscription]);
 
   // Bộ lọc khách hàng
   const filteredClients = useMemo(() => {
@@ -107,7 +109,7 @@ export default function ClientsPage() {
           <button
             type="button"
             onClick={() => {
-              fetchClients();
+              fetchClients(authUser?.id);
               fetchMySubscription();
             }}
             disabled={isLoadingClients}

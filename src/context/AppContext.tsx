@@ -184,13 +184,14 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   }, [todaySessions]);
 
   /**
-   * Gọi API thật lấy danh sách khách hàng từ Backend
+   * Gọi API thật lấy danh sách khách hàng từ Backend (cách ly dữ liệu theo PT đang đăng nhập)
    */
   const fetchClients = useCallback(async (trainerId?: string): Promise<ClientResponse[]> => {
     setIsLoadingClients(true);
     setClientsError(null);
     try {
-      const data = await clientApi.getAllClients(trainerId);
+      const effectiveTrainerId = trainerId || authUser?.id;
+      const data = await clientApi.getAllClients(effectiveTrainerId);
       const list = Array.isArray(data) ? data : [];
       setClients(list);
       return list;
@@ -207,15 +208,18 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setIsLoadingClients(false);
     }
-  }, []);
+  }, [authUser?.id]);
 
-  // Tự động tải danh sách khách hàng và gói dịch vụ khi người dùng đã đăng nhập
+  // Tự động tải danh sách khách hàng và gói dịch vụ khi người dùng đã đăng nhập; xóa danh sách khi đăng xuất
   useEffect(() => {
-    if (authUser) {
-      fetchClients();
+    if (authUser?.id) {
+      fetchClients(authUser.id);
       fetchMySubscription();
+    } else {
+      setClients([]);
+      setMySubscription(null);
     }
-  }, [authUser, fetchClients, fetchMySubscription]);
+  }, [authUser?.id, fetchClients, fetchMySubscription]);
 
   const loginAsPT = () => {
     setRole('ROLE_PT');
