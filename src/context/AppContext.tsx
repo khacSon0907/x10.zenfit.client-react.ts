@@ -14,6 +14,8 @@ import { toast } from 'sonner';
 import { useAuth } from './AuthContext';
 import { getUserRoleLabel, isAdminUser } from '../shared/utils/roleUtils';
 import { clientApi } from '../api/clientApi';
+import subscriptionPlanApi from '../api/subscriptionPlanApi';
+import type { UserSubscriptionResponse } from '../types/subscription';
 import type {
   ClientResponse,
   CreateClientRequest,
@@ -44,6 +46,9 @@ interface AppContextType {
   clients: ClientResponse[];
   isLoadingClients: boolean;
   clientsError: string | null;
+  mySubscription: UserSubscriptionResponse | null;
+  isLoadingSubscription: boolean;
+  fetchMySubscription: () => Promise<UserSubscriptionResponse | null>;
   todaySessions: WorkoutSession[];
   ptPlan: PTPlan;
   adminPTs: AdminPTUser[];
@@ -129,6 +134,33 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [isLoadingClients, setIsLoadingClients] = useState<boolean>(false);
   const [clientsError, setClientsError] = useState<string | null>(null);
 
+  // ============================================================================
+  // SUBSCRIPTION QUOTA TỪ API THẬT (GET /api/user-subscriptions/me)
+  // ============================================================================
+  const [mySubscription, setMySubscription] = useState<UserSubscriptionResponse | null>(null);
+  const [isLoadingSubscription, setIsLoadingSubscription] = useState<boolean>(false);
+
+  const fetchMySubscription = useCallback(async (): Promise<UserSubscriptionResponse | null> => {
+    setIsLoadingSubscription(true);
+    try {
+      const data = await subscriptionPlanApi.getMySubscription();
+      setMySubscription(data);
+      if (data?.maxStudents) {
+        setPtPlan((prev) => ({
+          ...prev,
+          name: data.planName || prev.name,
+          maxClients: data.maxStudents || prev.maxClients,
+          currentClients: data.currentStudents ?? prev.currentClients,
+        }));
+      }
+      return data;
+    } catch {
+      return null;
+    } finally {
+      setIsLoadingSubscription(false);
+    }
+  }, []);
+
   const [todaySessions, setTodaySessions] = useState<WorkoutSession[]>(() => {
     const saved = localStorage.getItem('zenfit_sessions');
     return saved ? JSON.parse(saved) : MOCK_TODAY_SESSIONS;
@@ -177,12 +209,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  // Tự động tải danh sách khách hàng khi người dùng đã đăng nhập
+  // Tự động tải danh sách khách hàng và gói dịch vụ khi người dùng đã đăng nhập
   useEffect(() => {
     if (authUser) {
       fetchClients();
+      fetchMySubscription();
     }
-  }, [authUser, fetchClients]);
+  }, [authUser, fetchClients, fetchMySubscription]);
 
   const loginAsPT = () => {
     setRole('ROLE_PT');
@@ -331,6 +364,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           ...prev,
           currentClients: prev.currentClients + 1,
         }));
+        fetchMySubscription();
         return true;
       }
 
@@ -341,6 +375,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         ...prev,
         currentClients: prev.currentClients + 1,
       }));
+      fetchMySubscription();
       toast.success(`Đã thêm học viên ${created.fullName} thành công!`);
       return true;
     } catch (err: unknown) {
@@ -392,6 +427,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         ...prev,
         currentClients: Math.max(0, prev.currentClients - 1),
       }));
+      fetchMySubscription();
       toast.success('Đã xoá hồ sơ khách hàng thành công!');
       return true;
     } catch (err: unknown) {
@@ -490,6 +526,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         clients,
         isLoadingClients,
         clientsError,
+        mySubscription,
+        isLoadingSubscription,
+        fetchMySubscription,
         todaySessions,
         ptPlan,
         adminPTs,

@@ -13,7 +13,7 @@ import {
 import { toast } from 'sonner';
 import subscriptionPlanApi from '../../api/subscriptionPlanApi';
 import clientApi from '../../api/clientApi';
-import type { SubscriptionPlan } from '../../types/subscriptionPlan';
+import type { SubscriptionPlan, UserSubscriptionResponse } from '../../types/subscription';
 import UpgradePlanModal from '../../components/pt/subscription/UpgradePlanModal';
 import { useAuth } from '../../context/AuthContext';
 
@@ -21,6 +21,7 @@ export default function PTSubscriptionPricingPage() {
   const { user } = useAuth();
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [defaultPlan, setDefaultPlan] = useState<SubscriptionPlan | null>(null);
+  const [mySubscription, setMySubscription] = useState<UserSubscriptionResponse | null>(null);
   const [studentCount, setStudentCount] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -32,15 +33,17 @@ export default function PTSubscriptionPricingPage() {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const [activePlans, defPlan, clients] = await Promise.all([
+      const [activePlans, defPlan, mySub, clients] = await Promise.all([
         subscriptionPlanApi.getActivePlans().catch(() => []),
         subscriptionPlanApi.getDefaultPlan().catch(() => null),
+        subscriptionPlanApi.getMySubscription().catch(() => null),
         clientApi.getAllClients().catch(() => []),
       ]);
 
       setPlans(activePlans);
       setDefaultPlan(defPlan);
-      setStudentCount(clients.length);
+      setMySubscription(mySub);
+      setStudentCount(mySub?.currentStudents ?? clients.length);
     } catch {
       toast.error('Không thể tải thông tin bảng giá. Vui lòng thử lại!');
     } finally {
@@ -53,9 +56,13 @@ export default function PTSubscriptionPricingPage() {
   }, []);
 
   // Determine current PT plan:
-  // If user has a plan code/id stored or defaults to defaultPlan, or the first free plan
-  const currentPlan = defaultPlan || plans.find((p) => p.isDefault) || plans[0] || null;
-  const maxAllowedStudents = currentPlan?.maxStudents ?? 5;
+  const currentPlan =
+    (mySubscription?.planId && plans.find((p) => p.id === mySubscription.planId)) ||
+    defaultPlan ||
+    plans.find((p) => p.isDefault) ||
+    plans[0] ||
+    null;
+  const maxAllowedStudents = mySubscription?.maxStudents ?? (currentPlan?.maxStudents ?? 5);
   const usagePercentage = Math.min(
     100,
     Math.round((studentCount / (maxAllowedStudents || 1)) * 100)

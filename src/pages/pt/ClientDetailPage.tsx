@@ -29,6 +29,7 @@ import { clientApi } from '../../api/clientApi';
 import { imageApi } from '../../api/imageApi';
 import { clientGoalService } from '../../services/clientGoalService';
 import { useAuth } from '../../context/AuthContext';
+import { useApp } from '../../context/AppContext';
 import type { ClientGoal } from '../../types/clientGoal';
 import ActiveGoalBanner from '../../components/goals/ActiveGoalBanner';
 import ClientGoalsTimeline from '../../components/goals/ClientGoalsTimeline';
@@ -49,6 +50,7 @@ export default function ClientDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user: authUser } = useAuth();
+  const { deleteClient: deleteClientApp, fetchMySubscription } = useApp();
 
   const [client, setClient] = useState<ClientResponse | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -475,7 +477,14 @@ export default function ClientDetailPage() {
     if (!id) return;
     setIsDeleting(true);
     try {
-      await clientApi.deleteClient(id);
+      if (deleteClientApp) {
+        await deleteClientApp(id);
+      } else {
+        await clientApi.deleteClient(id);
+      }
+      if (fetchMySubscription) {
+        await fetchMySubscription();
+      }
       toast.success('Đã xoá hồ sơ học viên thành công');
       navigate('/pt/clients');
     } catch (err: unknown) {

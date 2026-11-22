@@ -25,6 +25,7 @@ import {
   UserPlus,
   FileSignature,
   Info,
+  Zap,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { uploadClientAvatar, uploadClientBodyPhoto } from '../../api/imageApi';
@@ -57,7 +58,16 @@ export default function CreateClientPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user: authUser } = useAuth();
-  const { addClient } = useApp();
+  const { addClient, mySubscription, fetchMySubscription } = useApp();
+
+  // Tải thông tin gói đăng ký và hạn mức học viên
+  useEffect(() => {
+    fetchMySubscription();
+  }, [fetchMySubscription]);
+
+  const maxStudents = mySubscription?.maxStudents ?? 5;
+  const currentStudents = mySubscription?.currentStudents ?? 0;
+  const isQuotaFull = currentStudents >= maxStudents;
 
   // Phân biệt chế độ tạo theo route URL:
   // - Khi truy cập /pt/contracts/*: Chuyên biệt Tạo hợp đồng PT (CONTRACT_WITH_CLIENT)
@@ -576,6 +586,48 @@ export default function CreateClientPage() {
       }
     } catch (err: unknown) {
       console.error('Lỗi khi submit form:', err);
+
+      // Kiểm tra lỗi vượt quá giới hạn học viên (CLIENT.STUDENT_LIMIT_EXCEEDED) hoặc chưa có gói (CLIENT.SUBSCRIPTION_REQUIRED)
+      const apiErr = err as { response?: { data?: { code?: string; message?: string } } };
+      const errCode = apiErr.response?.data?.code;
+      const apiMsg = apiErr.response?.data?.message;
+
+      if (
+        errCode === 'CLIENT.STUDENT_LIMIT_EXCEEDED' ||
+        (apiMsg && apiMsg.includes('giới hạn tối đa'))
+      ) {
+        toast.error(
+          apiMsg ||
+            'Số lượng học viên đã đạt giới hạn tối đa của gói dịch vụ. Vui lòng nâng cấp gói để tiếp tục thêm học viên!',
+          {
+            action: {
+              label: 'Nâng cấp ngay',
+              onClick: () => navigate('/pt/pricing'),
+            },
+            duration: 6000,
+          }
+        );
+        fetchMySubscription();
+        return;
+      }
+
+      if (
+        errCode === 'CLIENT.SUBSCRIPTION_REQUIRED' ||
+        (apiMsg && apiMsg.includes('chưa đăng ký gói'))
+      ) {
+        toast.error(
+          apiMsg || 'Bạn chưa đăng ký gói dịch vụ hoặc gói dịch vụ đã hết hạn. Vui lòng chọn gói!',
+          {
+            action: {
+              label: 'Chọn gói',
+              onClick: () => navigate('/select-subscription'),
+            },
+            duration: 6000,
+          }
+        );
+        return;
+      }
+
       const errMsg = formatUploadErrorMessage(err);
       toast.error(errMsg);
     } finally {
@@ -658,6 +710,30 @@ export default function CreateClientPage() {
             </div>
           </div>
         </div>
+
+        {/* Cảnh báo hạn mức học viên nếu đã đầy */}
+        {isQuotaFull && (
+          <div className="mx-6 sm:mx-8 mt-6 p-4 rounded-2xl bg-gradient-to-r from-rose-950/40 via-red-950/30 to-slate-900 border border-rose-500/40 shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-rose-500/20 text-rose-400 shrink-0">
+                <AlertCircle className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="font-bold text-white text-sm">Hạn mức học viên đã đạt tối đa!</p>
+                <p className="text-slate-300 mt-0.5">
+                  Bạn đang quản lý <strong className="text-rose-400 font-bold">{currentStudents}/{maxStudents}</strong> học viên theo gói <strong className="text-white">{mySubscription?.planName || 'dịch vụ hiện tại'}</strong>. Hãy nâng cấp gói để tiếp tục thêm học viên mới.
+                </p>
+              </div>
+            </div>
+            <Link
+              to="/pt/pricing"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 text-white font-bold shrink-0 shadow-md transition"
+            >
+              <Zap className="w-3.5 h-3.5 fill-current" />
+              <span>Nâng cấp gói ngay</span>
+            </Link>
+          </div>
+        )}
 
         {/* ==================================================================
             MAIN FORM BODY
