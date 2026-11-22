@@ -5,7 +5,6 @@ import {
   Check,
   Zap,
   Sparkles,
-  LogOut,
   AlertCircle,
   RefreshCw,
   ArrowRight,
@@ -18,7 +17,7 @@ import type { SubscriptionPlan, UserSubscriptionResponse } from '../../types/sub
 import PaymentQRModal from '../../components/subscription/PaymentQRModal';
 
 export default function SelectSubscriptionPage() {
-  const { user, logout, setSubscriptionConfirmed } = useAuth();
+  const { user, setSubscriptionConfirmed } = useAuth();
   const navigate = useNavigate();
 
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
@@ -55,6 +54,7 @@ export default function SelectSubscriptionPage() {
   };
 
   useEffect(() => {
+    document.title = 'ZenFit | Chọn gói dịch vụ';
     fetchPlans();
   }, []);
 
@@ -110,7 +110,7 @@ export default function SelectSubscriptionPage() {
 
   return (
     <div className="min-h-screen bg-[#070e17] text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-black">
-      {/* 1. Header tối giản: Không có Sidebar để tránh user bấm thoát ra ngoài */}
+      {/* 1. Header tối giản: Chỉ hiển thị Logo, ẩn thông tin tài khoản và đăng xuất */}
       <header className="h-18 border-b border-[#162338] bg-[#0c1626]/90 backdrop-blur-md sticky top-0 z-40 px-4 sm:px-8 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-emerald-500 via-teal-500 to-indigo-500 flex items-center justify-center p-1.5 shadow-lg shadow-emerald-500/20">
@@ -124,25 +124,6 @@ export default function SelectSubscriptionPage() {
               Khởi đầu huấn luyện
             </span>
           </div>
-        </div>
-
-        <div className="flex items-center gap-4">
-          <div className="hidden sm:block text-right">
-            <p className="text-xs font-semibold text-white">
-              {user?.name || user?.username || 'Huấn luyện viên'}
-            </p>
-            <p className="text-[11px] text-slate-400 truncate">{user?.email}</p>
-          </div>
-
-          <button
-            type="button"
-            onClick={logout}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-rose-500/30 bg-rose-950/20 text-rose-400 hover:bg-rose-900/30 hover:border-rose-400 text-xs font-semibold transition-colors cursor-pointer"
-            title="Đăng xuất khỏi tài khoản"
-          >
-            <LogOut className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Đăng xuất</span>
-          </button>
         </div>
       </header>
 
