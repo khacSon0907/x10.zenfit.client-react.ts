@@ -33,6 +33,7 @@ import { useApp } from '../../context/AppContext';
 import type { ClientGoal } from '../../types/clientGoal';
 import ActiveGoalBanner from '../../components/goals/ActiveGoalBanner';
 import ClientGoalsTimeline from '../../components/goals/ClientGoalsTimeline';
+import ClientNutritionSection from '../../components/nutrition/ClientNutritionSection';
 import type {
   ClientResponse,
   Gender,
@@ -1685,6 +1686,11 @@ export default function ClientDetailPage() {
         isLoading={isLoadingGoals}
         onRefreshGoals={fetchClientGoals}
       />
+
+      {/* ====================================================================
+          CLIENT NUTRITION PLAN & MEALS (KẾ HOẠCH DINH DƯỠNG & THỰC ĐƠN HỌC VIÊN)
+         ==================================================================== */}
+      <ClientNutritionSection clientId={client.id} clientName={client.fullName} />
 
       {/* ====================================================================
           FLOATING STICKY ACTION BAR KHI ĐANG Ở CHẾ ĐỘ SỬA

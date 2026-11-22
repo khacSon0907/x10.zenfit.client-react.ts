@@ -14,9 +14,11 @@ import {
   RefreshCw,
   Sliders,
   TrendingUp,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { nutritionPlanService } from '../../services/nutritionPlanService';
+import { exportNutritionPlanToExcel } from '../../utils/exportNutritionExcel';
 import type {
   NutritionPlan,
   NutritionFood,
@@ -233,6 +235,21 @@ export default function NutritionPlanDetailPage() {
             title="Làm mới dữ liệu"
           >
             <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              if (plan) {
+                exportNutritionPlanToExcel(plan, plan.clientName);
+                toast.success('Đã xuất file Excel kế hoạch dinh dưỡng thành công!');
+              }
+            }}
+            className="px-3.5 py-2 rounded-xl border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+            title="Xuất file Excel kế hoạch dinh dưỡng"
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5" />
+            <span>Xuất file Excel</span>
           </button>
 
           <button

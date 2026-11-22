@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Utensils, Flame, Dumbbell, Zap, Droplets, Loader2, Sparkles, Calculator } from 'lucide-react';
+import { X, Utensils, Flame, Loader2, Calculator } from 'lucide-react';
 import { toast } from 'sonner';
 import type { MealType, NutritionFood } from '../../types/nutrition';
 import { MEAL_TYPES, MEAL_TYPE_CONFIG } from '../../types/nutrition';

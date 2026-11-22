@@ -13,12 +13,14 @@ import {
   ChevronRight,
   AlertTriangle,
   RefreshCw,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { nutritionPlanService } from '../../services/nutritionPlanService';
 import type { NutritionPlan, NutritionPlanStatus } from '../../types/nutrition';
 import { NUTRITION_PLAN_STATUS_CONFIG } from '../../types/nutrition';
 import NutritionPlanModal from '../../components/nutrition/NutritionPlanModal';
+import { exportNutritionPlanToExcel } from '../../utils/exportNutritionExcel';
 
 export default function NutritionPlanListPage() {
   const navigate = useNavigate();
@@ -391,6 +393,19 @@ export default function NutritionPlanListPage() {
                   </div>
 
                   <div className="flex items-center gap-1.5">
+                    {/* Export Excel button */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        exportNutritionPlanToExcel(plan, plan.clientName);
+                        toast.success(`Đã xuất file Excel cho kế hoạch "${plan.name}"`);
+                      }}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors cursor-pointer"
+                      title="Xuất file Excel"
+                    >
+                      <FileSpreadsheet className="w-3.5 h-3.5" />
+                    </button>
+
                     {/* Edit button */}
                     <button
                       type="button"

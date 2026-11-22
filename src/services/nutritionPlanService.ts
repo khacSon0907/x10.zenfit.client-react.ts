@@ -48,7 +48,20 @@ export const nutritionPlanService = {
    * POST /api/v1/nutrition-plans
    */
   createPlan: async (payload: CreateNutritionPlanRequest): Promise<NutritionPlan> => {
-    const res = await axiosClient.post<ApiResponse<NutritionPlan>>(BASE_URL, payload);
+    const sanitized = {
+      ...payload,
+      startDate: payload.startDate?.trim() ? payload.startDate.trim() : undefined,
+      endDate: payload.endDate?.trim() ? payload.endDate.trim() : undefined,
+      dailyMacroTarget: payload.dailyMacroTarget
+        ? {
+            calories: Number(payload.dailyMacroTarget.calories),
+            protein: Number(payload.dailyMacroTarget.protein),
+            carbs: Number(payload.dailyMacroTarget.carbs),
+            fat: Number(payload.dailyMacroTarget.fat),
+          }
+        : undefined,
+    };
+    const res = await axiosClient.post<ApiResponse<NutritionPlan>>(BASE_URL, sanitized);
     return res.data.data;
   },
 
@@ -60,7 +73,12 @@ export const nutritionPlanService = {
     planId: string,
     payload: UpdateNutritionPlanRequest
   ): Promise<NutritionPlan> => {
-    const res = await axiosClient.put<ApiResponse<NutritionPlan>>(`${BASE_URL}/${planId}`, payload);
+    const sanitized = {
+      ...payload,
+      startDate: payload.startDate?.trim() ? payload.startDate.trim() : undefined,
+      endDate: payload.endDate?.trim() ? payload.endDate.trim() : undefined,
+    };
+    const res = await axiosClient.put<ApiResponse<NutritionPlan>>(`${BASE_URL}/${planId}`, sanitized);
     return res.data.data;
   },
 
@@ -77,9 +95,20 @@ export const nutritionPlanService = {
    * POST /api/v1/nutrition-plans/:planId/foods
    */
   addFood: async (planId: string, payload: NutritionFoodRequest): Promise<NutritionFood> => {
+    const sanitized: NutritionFoodRequest = {
+      mealType: payload.mealType,
+      foodName: payload.foodName?.trim(),
+      quantity: Number(payload.quantity),
+      unit: payload.unit?.trim() || undefined,
+      calories: Number(payload.calories || 0),
+      protein: Number(payload.protein || 0),
+      carbs: Number(payload.carbs || 0),
+      fat: Number(payload.fat || 0),
+      note: payload.note?.trim() || undefined,
+    };
     const res = await axiosClient.post<ApiResponse<NutritionFood>>(
       `${BASE_URL}/${planId}/foods`,
-      payload
+      sanitized
     );
     return res.data.data;
   },
@@ -93,9 +122,20 @@ export const nutritionPlanService = {
     foodId: string,
     payload: UpdateNutritionFoodRequest
   ): Promise<NutritionFood> => {
+    const sanitized: UpdateNutritionFoodRequest = {
+      mealType: payload.mealType,
+      foodName: payload.foodName !== undefined ? payload.foodName.trim() : undefined,
+      quantity: payload.quantity !== undefined ? Number(payload.quantity) : undefined,
+      unit: payload.unit !== undefined ? payload.unit.trim() : undefined,
+      calories: payload.calories !== undefined ? Number(payload.calories) : undefined,
+      protein: payload.protein !== undefined ? Number(payload.protein) : undefined,
+      carbs: payload.carbs !== undefined ? Number(payload.carbs) : undefined,
+      fat: payload.fat !== undefined ? Number(payload.fat) : undefined,
+      note: payload.note !== undefined ? payload.note.trim() : undefined,
+    };
     const res = await axiosClient.put<ApiResponse<NutritionFood>>(
       `${BASE_URL}/${planId}/foods/${foodId}`,
-      payload
+      sanitized
     );
     return res.data.data;
   },
@@ -116,9 +156,15 @@ export const nutritionPlanService = {
     planId: string,
     payload: UpdateMacroTargetRequest
   ): Promise<DailyMacroTarget> => {
+    const sanitized: UpdateMacroTargetRequest = {
+      calories: Number(payload.calories),
+      protein: Number(payload.protein),
+      carbs: Number(payload.carbs),
+      fat: Number(payload.fat),
+    };
     const res = await axiosClient.put<ApiResponse<DailyMacroTarget>>(
       `${BASE_URL}/${planId}/macro-target`,
-      payload
+      sanitized
     );
     return res.data.data;
   },
