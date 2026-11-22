@@ -5,7 +5,6 @@ import {
   Users,
   FileSignature,
   TrendingUp,
-  ClipboardList,
   Database,
   User,
   Settings,
@@ -14,6 +13,7 @@ import {
   ChevronRight,
   X,
   Crown,
+  Utensils,
 } from 'lucide-react';
 import logo from '../../../assets/logo/logo-zenfit.png';
 
@@ -36,7 +36,8 @@ export default function PTSidebar({
     { to: '/pt/revenue', label: 'Doanh thu', icon: Database },
     { to: '/pt/subscription', label: 'Gói dịch vụ & Hạn mức', icon: Crown },
     { to: '/pt/progress', label: 'Tiến độ & số đo', icon: TrendingUp },
-    { to: '/pt/plans', label: 'Giáo án & dinh dưỡng', icon: ClipboardList },
+    { to: '/pt/plans', label: 'Giáo án tập luyện', icon: Dumbbell },
+    { to: '/pt/nutrition-plans', label: 'Kế hoạch dinh dưỡng', icon: Utensils },
     { to: '/pt/profile', label: 'Hồ sơ PT', icon: User },
     { to: '/pt/account', label: 'Cài đặt', icon: Settings, searchParam: '?tab=settings' },
   ];

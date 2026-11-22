@@ -1,0 +1,154 @@
+import axiosClient from '../api/axiosClient';
+import type { ApiResponse } from '../types/auth';
+import type {
+  NutritionPlan,
+  NutritionFood,
+  DailyMacroTarget,
+  NutritionMacroSummary,
+  CreateNutritionPlanRequest,
+  UpdateNutritionPlanRequest,
+  NutritionFoodRequest,
+  UpdateNutritionFoodRequest,
+  UpdateMacroTargetRequest,
+} from '../types/nutrition';
+import type { ClientResponse } from '../types/client.types';
+
+const BASE_URL = '/api/v1/nutrition-plans';
+
+export const nutritionPlanService = {
+  /**
+   * 1. Lấy danh sách kế hoạch dinh dưỡng của PT hiện tại
+   * GET /api/v1/nutrition-plans
+   */
+  getMyPlans: async (): Promise<NutritionPlan[]> => {
+    const res = await axiosClient.get<ApiResponse<NutritionPlan[]>>(BASE_URL);
+    return res.data.data ?? [];
+  },
+
+  /**
+   * 2. Lấy chi tiết kế hoạch dinh dưỡng (kèm danh sách món ăn & thống kê macro)
+   * GET /api/v1/nutrition-plans/:planId
+   */
+  getPlanDetail: async (planId: string): Promise<NutritionPlan> => {
+    const res = await axiosClient.get<ApiResponse<NutritionPlan>>(`${BASE_URL}/${planId}`);
+    return res.data.data;
+  },
+
+  /**
+   * 3. Lấy danh sách kế hoạch dinh dưỡng theo học viên
+   * GET /api/v1/nutrition-plans/clients/:clientId
+   */
+  getClientPlans: async (clientId: string): Promise<NutritionPlan[]> => {
+    const res = await axiosClient.get<ApiResponse<NutritionPlan[]>>(`${BASE_URL}/clients/${clientId}`);
+    return res.data.data ?? [];
+  },
+
+  /**
+   * 4. Tạo kế hoạch dinh dưỡng mới
+   * POST /api/v1/nutrition-plans
+   */
+  createPlan: async (payload: CreateNutritionPlanRequest): Promise<NutritionPlan> => {
+    const res = await axiosClient.post<ApiResponse<NutritionPlan>>(BASE_URL, payload);
+    return res.data.data;
+  },
+
+  /**
+   * 5. Cập nhật thông tin kế hoạch dinh dưỡng
+   * PUT /api/v1/nutrition-plans/:planId
+   */
+  updatePlan: async (
+    planId: string,
+    payload: UpdateNutritionPlanRequest
+  ): Promise<NutritionPlan> => {
+    const res = await axiosClient.put<ApiResponse<NutritionPlan>>(`${BASE_URL}/${planId}`, payload);
+    return res.data.data;
+  },
+
+  /**
+   * 6. Xóa kế hoạch dinh dưỡng
+   * DELETE /api/v1/nutrition-plans/:planId
+   */
+  deletePlan: async (planId: string): Promise<void> => {
+    await axiosClient.delete<ApiResponse<void>>(`${BASE_URL}/${planId}`);
+  },
+
+  /**
+   * 7. Thêm món ăn vào kế hoạch
+   * POST /api/v1/nutrition-plans/:planId/foods
+   */
+  addFood: async (planId: string, payload: NutritionFoodRequest): Promise<NutritionFood> => {
+    const res = await axiosClient.post<ApiResponse<NutritionFood>>(
+      `${BASE_URL}/${planId}/foods`,
+      payload
+    );
+    return res.data.data;
+  },
+
+  /**
+   * 8. Cập nhật món ăn trong kế hoạch
+   * PUT /api/v1/nutrition-plans/:planId/foods/:foodId
+   */
+  updateFood: async (
+    planId: string,
+    foodId: string,
+    payload: UpdateNutritionFoodRequest
+  ): Promise<NutritionFood> => {
+    const res = await axiosClient.put<ApiResponse<NutritionFood>>(
+      `${BASE_URL}/${planId}/foods/${foodId}`,
+      payload
+    );
+    return res.data.data;
+  },
+
+  /**
+   * 9. Xóa món ăn khỏi kế hoạch
+   * DELETE /api/v1/nutrition-plans/:planId/foods/:foodId
+   */
+  deleteFood: async (planId: string, foodId: string): Promise<void> => {
+    await axiosClient.delete<ApiResponse<void>>(`${BASE_URL}/${planId}/foods/${foodId}`);
+  },
+
+  /**
+   * 10. Cập nhật Macro mục tiêu trong ngày
+   * PUT /api/v1/nutrition-plans/:planId/macro-target
+   */
+  updateMacroTarget: async (
+    planId: string,
+    payload: UpdateMacroTargetRequest
+  ): Promise<DailyMacroTarget> => {
+    const res = await axiosClient.put<ApiResponse<DailyMacroTarget>>(
+      `${BASE_URL}/${planId}/macro-target`,
+      payload
+    );
+    return res.data.data;
+  },
+
+  /**
+   * 11. Lấy thống kê Macro & % hoàn thành
+   * GET /api/v1/nutrition-plans/:planId/macro-summary
+   */
+  getMacroSummary: async (planId: string): Promise<NutritionMacroSummary> => {
+    const res = await axiosClient.get<ApiResponse<NutritionMacroSummary>>(
+      `${BASE_URL}/${planId}/macro-summary`
+    );
+    return res.data.data;
+  },
+
+  /**
+   * 12. Lấy danh sách học viên của PT (hỗ trợ dropdown chọn Client khi tạo kế hoạch)
+   * GET /api/clients/my-clients hoặc fallback GET /api/clients
+   */
+  getMyClients: async (): Promise<ClientResponse[]> => {
+    try {
+      const res = await axiosClient.get<ApiResponse<ClientResponse[]>>('/api/clients/my-clients');
+      return res.data.data ?? [];
+    } catch {
+      // Fallback nếu endpoint /my-clients chưa được tạo
+      const fallback = await axiosClient.get<ApiResponse<ClientResponse[]>>('/api/clients');
+      return fallback.data.data ?? [];
+    }
+  },
+};
+
+export default nutritionPlanService;
+

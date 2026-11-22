@@ -22,6 +22,8 @@ import TrialsRenewalsPage from '../pages/pt/TrialsRenewalsPage';
 import PTSubscriptionPricingPage from '../pages/pt/PTSubscriptionPricingPage';
 import ProgressPage from '../pages/pt/ProgressPage';
 import PlansPage from '../pages/pt/PlansPage';
+import NutritionPlanListPage from '../pages/nutrition/NutritionPlanListPage';
+import NutritionPlanDetailPage from '../pages/nutrition/NutritionPlanDetailPage';
 import RevenuePage from '../pages/pt/RevenuePage';
 import MyAccountPage from '../pages/pt/MyAccountPage';
 import ProfilePage from '../pages/ProfilePage';
@@ -163,6 +165,8 @@ export default function AppRoutes() {
         <Route path="pricing" element={<PTSubscriptionPricingPage />} />
         <Route path="progress" element={<ProgressPage />} />
         <Route path="plans" element={<PlansPage />} />
+        <Route path="nutrition-plans" element={<NutritionPlanListPage />} />
+        <Route path="nutrition-plans/:planId" element={<NutritionPlanDetailPage />} />
         <Route path="revenue" element={<RevenuePage />} />
         <Route path="account" element={<MyAccountPage />} />
         <Route path="profile" element={<ProfilePage />} />
