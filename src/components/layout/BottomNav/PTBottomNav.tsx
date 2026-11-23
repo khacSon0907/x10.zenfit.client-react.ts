@@ -33,7 +33,7 @@ export default function PTBottomNav() {
     { to: '/pt/contracts', label: 'Hợp đồng PT', icon: FileSignature },
     { to: '/pt/packages', label: 'Gói & Thanh toán', icon: CreditCard },
     { to: '/pt/progress', label: 'Tiến độ & Số đo', icon: TrendingUp },
-    { to: '/pt/plans', label: 'Kế hoạch & Giáo án', icon: ClipboardList },
+    { to: '/pt/workout-plans', label: 'Kế hoạch & Giáo án', icon: ClipboardList },
     { to: '/pt/revenue', label: 'Doanh thu & Công nợ', icon: Wallet },
     { to: '/pt/account', label: 'Gói của tôi & Tài khoản', icon: UserCheck },
   ];

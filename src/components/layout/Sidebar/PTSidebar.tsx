@@ -36,7 +36,7 @@ export default function PTSidebar({
     { to: '/pt/revenue', label: 'Doanh thu', icon: Database },
     { to: '/pt/subscription', label: 'Gói dịch vụ & Hạn mức', icon: Crown },
     { to: '/pt/progress', label: 'Tiến độ & số đo', icon: TrendingUp },
-    { to: '/pt/plans', label: 'Giáo án tập luyện', icon: Dumbbell },
+    { to: '/pt/workout-plans', label: 'Giáo án tập luyện', icon: Dumbbell },
     { to: '/pt/nutrition-plans', label: 'Kế hoạch dinh dưỡng', icon: Utensils },
     { to: '/pt/profile', label: 'Hồ sơ PT', icon: User },
     { to: '/pt/account', label: 'Cài đặt', icon: Settings, searchParam: '?tab=settings' },
